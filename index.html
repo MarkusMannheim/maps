@@ -20,16 +20,43 @@
     <!-- scripts -->
     <script src="./resources/d3.v7.min.js"></script>
     <script src="./resources/topojson.v3.min.js"></script>
+    <script src="./resources/turf.min.js"></script>
+    <script src="./config.js"></script>
     <link href="./resources/style.css" rel="stylesheet">
     <link href="./resources/abcLogo64.png" rel="icon">
-    </script>
+    <script src="https://unpkg.com/maplibre-gl@2.1.9/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@2.1.9/dist/maplibre-gl.css" rel="stylesheet">
   </head>
 
   <body>
     <div id="map"></div>
 
     <script>
+      d3.json("./data/aust.topojson")
+        .then(function(data) {
+          austData = topojson.feature(data, data.objects.data);
 
+          map = new maplibregl.Map({
+            container: "map",
+            style: {version: 8, sources: {}, layers: []},
+            bounds: turf.bbox(austData)
+          });
+
+          map.on("load", function() {
+            map.addSource("aust", {
+              type: "geojson",
+              data: austData
+            }).addLayer({
+              id: "aust",
+              type: "fill",
+              source: "aust",
+              paint: {
+                "fill-color": "#009de5",
+                "fill-opacity": 0.8
+              }
+            });
+          });
+        });
 
     </script>
   </body>
