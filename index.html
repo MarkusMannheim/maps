@@ -21,7 +21,6 @@
     <script src="./resources/d3.v7.min.js"></script>
     <script src="./resources/topojson.v3.min.js"></script>
     <script src="./resources/turf.min.js"></script>
-    <script src="./config.js"></script>
     <link href="./resources/style.css" rel="stylesheet">
     <link href="./resources/abcLogo64.png" rel="icon">
     <script src="https://unpkg.com/maplibre-gl@2.1.9/dist/maplibre-gl.js"></script>
@@ -32,27 +31,55 @@
     <div id="map"></div>
 
     <script>
-      d3.json("./data/aust.topojson")
-        .then(function(data) {
-          austData = topojson.feature(data, data.objects.data);
+      Promise.all([
+        d3.json("./data/cbr_qbn.topojson"),
+        d3.json("./data/act.topojson"),
+        d3.json("./data/water.topojson")
+      ]).then(function(data) {
+          suburbData = topojson.feature(data[0], data[0].objects.data);
+          borderData = topojson.feature(data[1], data[1].objects.data);
+          waterData = topojson.feature(data[2], data[2].objects.data);
 
           map = new maplibregl.Map({
             container: "map",
             style: {version: 8, sources: {}, layers: []},
-            bounds: turf.bbox(austData)
+            bounds: turf.bbox(borderData),
+            maxBounds: [148.8, -35.6, 149.4, -35]
           });
 
           map.on("load", function() {
-            map.addSource("aust", {
+            map.addSource("suburbs", {
               type: "geojson",
-              data: austData
+              data: suburbData
             }).addLayer({
-              id: "aust",
+              id: "suburbs",
               type: "fill",
-              source: "aust",
+              source: "suburbs",
               paint: {
                 "fill-color": "#009de5",
-                "fill-opacity": 0.8
+                "fill-outline-color": "#fff",
+                "fill-opacity": .5,
+              }
+            }).addSource("border", {
+              type: "geojson",
+              data: borderData
+            }).addLayer({
+              id: "border",
+              type: "line",
+              source: "border",
+              paint: {
+                "line-color": "#8495a9",
+                "line-dasharray": [2, 2]
+              }
+            }).addSource("water", {
+              type: "geojson",
+              data: waterData
+            }).addLayer({
+              id: "water",
+              type: "fill",
+              source: "water",
+              paint: {
+                "fill-color": "#1c64b8"
               }
             });
           });
