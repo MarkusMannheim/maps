@@ -33,12 +33,14 @@
     <script>
       Promise.all([
         d3.json("./data/cbr_qbn.topojson"),
+        d3.json("./data/park.topojson"),
         d3.json("./data/act.topojson"),
         d3.json("./data/water.topojson")
       ]).then(function(data) {
           suburbData = topojson.feature(data[0], data[0].objects.data);
-          borderData = topojson.feature(data[1], data[1].objects.data);
-          waterData = topojson.feature(data[2], data[2].objects.data);
+          parkData = topojson.feature(data[1], data[1].objects.data);
+          borderData = topojson.feature(data[2], data[2].objects.data);
+          waterData = topojson.feature(data[3], data[3].objects.data);
 
           map = new maplibregl.Map({
             container: "map",
@@ -48,19 +50,30 @@
           });
 
           map.on("load", function() {
-            map.addSource("suburbs", {
+            map.addSource("park", {
               type: "geojson",
-              data: suburbData
+              data: parkData
             }).addLayer({
-              id: "suburbs",
+              id: "park",
               type: "fill",
-              source: "suburbs",
+              source: "park",
               paint: {
-                "fill-color": "#009de5",
-                "fill-outline-color": "#fff",
-                "fill-opacity": .5,
+                "fill-color": "#f2f2f2"
               }
-            }).addSource("border", {
+            })
+            //   .addSource("suburbs", {
+            //   type: "geojson",
+            //   data: suburbData
+            // }).addLayer({
+            //   id: "suburbs",
+            //   type: "line",
+            //   source: "suburbs",
+            //   paint: {
+            //     "line-color": "#8495a9",
+            //     "line-opacity": .5
+            //   }
+            // })
+              .addSource("border", {
               type: "geojson",
               data: borderData
             }).addLayer({
@@ -69,6 +82,7 @@
               source: "border",
               paint: {
                 "line-color": "#8495a9",
+                "line-width": 2,
                 "line-dasharray": [2, 2]
               }
             }).addSource("water", {
