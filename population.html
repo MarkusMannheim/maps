@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-155991615-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag("js", new Date());
+      gtag("config", "UA-155991615-1");
+    </script>
+
+    <!-- metaphysics -->
+    <meta charset="utf-8">
+    <title>Canberra housing</title>
+    <meta name="author" content="Markus Mannheim">
+    <meta name="keywords" content="map, data, act, canberra, housing, houses, units, townhouses, dwellings">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- scripts -->
+    <script src="./resources/d3.v7.min.js"></script>
+    <script src="./resources/topojson.v3.min.js"></script>
+    <script src="./resources/turf.min.js"></script>
+    <link href="./resources/population_style.css" rel="stylesheet">
+    <link href="./resources/abcLogo64.png" rel="icon">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.js"></script>
+  </head>
+
+  <body>
+    <div id="map"></div>
+
+    <script>
+      // elements
+      d3.json("./data/test.topojson")
+        .then(function(data) {
+
+          geoData = topojson
+            .feature(data, data.objects.data);
+
+          // await fonts
+          document.fonts.onloadingdone = fontsReady();
+        });
+
+      function fontsReady() {
+        mapboxgl.accessToken = "pk.eyJ1IjoibmV3cy1vbjFpbmUiLCJhIjoiR3FlZFZlVSJ9._30EFE9XYhQitqf4gzRG-g";
+
+        map = new mapboxgl.Map({
+          container: "map",
+          style: "mapbox://styles/mapbox/light-v10",
+          center: [149.126944, -35.293056],
+          zoom: 11,
+          maxZoom: 16,
+          minZoom: 9,
+          attributionControl: false
+        });
+
+        attrib = new mapboxgl.AttributionControl({
+          customAttribution: "Australian Bureau of Statistics",
+          compact: true
+        });
+        nav = new mapboxgl.NavigationControl({
+          showZoom: false
+        });
+
+        map.addControl(attrib)
+          .addControl(nav)
+          .on("load", function() {
+
+            map.getStyle()
+              .layers.map(function(d) {
+                return d.id;
+              })
+              .forEach(function(d) {
+                if (
+                  !d.includes("water") &&
+                  !d.includes("boundary") &&
+                  !d.includes("land-structure") &&
+                  !d.includes("road")
+                ) map.removeLayer(d);
+              });
+
+            map.addSource("mesh", {
+              type: "geojson",
+              data: geoData
+            });
+
+            map.addLayer({
+              id: "mesh",
+              type: "fill-extrusion",
+              source: "mesh",
+              paint: {
+                "fill-extrusion-color": ["get", "fill"],
+                "fill-extrusion-height": ["get", "people"]
+              }
+            }, "admin-1-boundary-bg");
+          });
+      }
+    </script>
+  </body>
+</html>
