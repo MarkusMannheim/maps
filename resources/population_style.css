@@ -25,4 +25,61 @@ body {
   top: 0;
   bottom: 0;
   width: 100%;
+  opacity: 0;
+}
+#header {
+  top: .5rem;
+  left: .5rem;
+  position: absolute;
+  background: white;
+  color: #8495a9;
+  box-shadow: 1px 1px 4px #001533;
+  display: flex;
+  font-family: ABCSansNovaBlack, "Arial Black", -webkit-bodyHelvetica, sans-serif;
+  flex-flow: column;
+  font-size: .95rem;
+}
+#header div {
+  padding: .25rem;
+  border-bottom: .5px solid #8495a9;
+  cursor: pointer;
+}
+#header div.on {
+  background: #009de5;
+  color: white;
+  border-bottom: .5px solid #009de5;
+  pointer-events: none;
+}
+#legend {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  height: 210px;
+  width: 90px;
+}
+#legendTitle {
+  fill: #001533;
+  font-size: .8rem;
+  font-weight: bold;
+  text-anchor: middle;
+}
+#legendTitle tspan:last-child {
+  font-weight: lighter;
+  font-size: .7rem;
+}
+#legend rect {
+  stroke: #001533;
+  stroke-width: .5;
+  fill: url(#gradient);
+}
+#legend #axisGroup .domain {
+  stroke: none;
+}
+#legend #axisGroup .tick line {
+  stroke: #001533;
+  stroke-width: .5;
+}
+#axisGroup .tick text {
+  fill: #001533;
+  font-size: .7rem;
 }

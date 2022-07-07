@@ -29,43 +29,122 @@
 
   <body>
     <div id="map"></div>
+    <div id="header">
+      <div id="option2011" onclick="yearToggle(2011)">2011</div>
+      <div id="option2016" onclick="yearToggle(2016)">2016</div>
+      <div id="option2021" class="on" onclick="yearToggle(2021)">2021</div>
+    </div>
+    <svg id="legend">
+      <defs>
+        <linearGradient id="gradient" x1="0%" x2="0%" y1="100%" y2="0%"></linearGradient>
+      </defs>
+      <g id="legendGroup">
+        <rect x=40 y=50 width=30 height=150></rect>
+        <text id="legendTitle">
+          <tspan x=55 y=10>population</tspan>
+          <tspan x=55 y=22>density</tspan>
+          <tspan x=55 y=37>(ppl/ha)</tspan>
+        </text>
+        <g id="axisGroup" transform='translate(40, 50)'></g>
+      </g>
+    </div>
 
     <script>
       // elements
-      d3.json("./data/test.topojson")
-        .then(function(data) {
+      header = d3.select("#header");
+      legend = d3.select("#legend");
+      gradient = d3.select("#gradient");
+      legendGroup = d3.select("#legendGroup");
+      axisGroup = d3.select("#axisGroup");
+      cities = {
+        Belconnen: [149.0661, -35.2386],
+        Civic: [149.126944, -35.293056],
+        Gungahlin: [149.133, -35.1831],
+        Queanbeyan: [149.234167, -35.353333],
+        Tuggeranong: [149.0888, -35.4244]
+      };
 
-          geoData = topojson
-            .feature(data, data.objects.data);
+      // load data
+      Promise.all([
+        d3.json("./data/pop_2021.topojson"),
+        d3.json("./data/pop_2016.topojson"),
+        d3.json("./data/pop_2011.topojson"),
+      ]).then(function(data) {
+
+          // format data
+          geoData_2021 = topojson
+            .feature(data[0], data[0].objects.data);
+          geoData_2016 = topojson
+            .feature(data[1], data[1].objects.data);
+          geoData_2011 = topojson
+            .feature(data[2], data[2].objects.data);
 
           // await fonts
           document.fonts.onloadingdone = fontsReady();
+
+          // set up legend
+          gradient.selectAll("stop")
+            .data(d3.range(0, 1.1, .1))
+          .enter().append("stop")
+            .attr("stop-color", function(d) { return d3.interpolateYlOrRd(d); })
+            .attr("offset", function(d) { return d * 100 + "%"; });
+          axisScale = d3.scaleLinear()
+            .range([150, 112.5, 75, 37.5, 0])
+            .domain([1, 210, 250, 340, 1060]);
+          axis = d3.axisLeft(axisScale)
+            .tickValues([1, 210, 250, 340, 1060])
+            .tickSizeOuter(0);
+          axisGroup.call(axis);
         });
 
       function fontsReady() {
+        // await user (scroll to map)
+        loadTarget = document.querySelector("#map");
+
+        // set up frame activation
+        observer = new IntersectionObserver(loadFrame, {
+          threshold: 1
+        });
+        ready = false;
+        observer.observe(loadTarget);
+      }
+
+      function loadFrame(interactionObjects) {
+        interactionObjects.map(function(object) {
+          if (!ready && object.isIntersecting) drawMap();
+        });
+      }
+
+      function drawMap() {
+        ready = true;
         mapboxgl.accessToken = "pk.eyJ1IjoibmV3cy1vbjFpbmUiLCJhIjoiR3FlZFZlVSJ9._30EFE9XYhQitqf4gzRG-g";
 
         map = new mapboxgl.Map({
           container: "map",
           style: "mapbox://styles/mapbox/light-v10",
-          center: [149.126944, -35.293056],
-          zoom: 11,
+          center: cities.Civic,
+          zoom: 10,
+          bearing: 30,
+          pitch: 30,
           maxZoom: 16,
           minZoom: 9,
-          attributionControl: false
+          attributionControl: false,
+          maxBounds: [148, -36, 150, -34]
         });
 
         attrib = new mapboxgl.AttributionControl({
           customAttribution: "Australian Bureau of Statistics",
           compact: true
         });
-        nav = new mapboxgl.NavigationControl({
-          showZoom: false
-        });
+        nav = new mapboxgl.NavigationControl();
 
-        map.addControl(attrib)
+        map.addControl(attrib, "bottom-left")
           .addControl(nav)
           .on("load", function() {
+
+            d3.select("#map").transition()
+              .duration(2000)
+              .style("opacity", 1);
 
             map.getStyle()
               .layers.map(function(d) {
@@ -80,21 +159,64 @@
                 ) map.removeLayer(d);
               });
 
-            map.addSource("mesh", {
+            map.addSource("mesh_2021", {
               type: "geojson",
-              data: geoData
+              data: geoData_2021
+            }).addSource("mesh_2016", {
+              type: "geojson",
+              data: geoData_2016
+            }).addSource("mesh_2011", {
+              type: "geojson",
+              data: geoData_2011
             });
 
             map.addLayer({
-              id: "mesh",
+              id: "mesh_2021",
               type: "fill-extrusion",
-              source: "mesh",
+              source: "mesh_2021",
               paint: {
                 "fill-extrusion-color": ["get", "fill"],
                 "fill-extrusion-height": ["get", "people"]
               }
-            }, "admin-1-boundary-bg");
+            }, "admin-1-boundary-bg")
+              .addLayer({
+                id: "mesh_2016",
+                type: "fill-extrusion",
+                source: "mesh_2016",
+                paint: {
+                  "fill-extrusion-color": ["get", "fill"],
+                  "fill-extrusion-height": ["get", "people"]
+                }
+              }, "admin-1-boundary-bg")
+              .addLayer({
+                id: "mesh_2011",
+                type: "fill-extrusion",
+                source: "mesh_2011",
+                paint: {
+                  "fill-extrusion-color": ["get", "fill"],
+                  "fill-extrusion-height": ["get", "people"]
+                }
+              }, "admin-1-boundary-bg");
           });
+      }
+
+      function yearToggle(option) {
+        document.querySelectorAll("#header div").forEach(function(d) {
+          d.className = "off";
+        });
+        ["mesh_2011", "mesh_2016", "mesh_2021"].forEach(function(d) {
+          map.setLayoutProperty(d, "visibility", "none");
+        });
+        if (option == 2011) {
+          map.setLayoutProperty("mesh_2011", "visibility", "visible");
+          document.querySelector("#header #option2011").className = "on";
+        } else if (option == 2016) {
+          map.setLayoutProperty("mesh_2016", "visibility", "visible");
+          document.querySelector("#header #option2016").className = "on";
+        } else {
+          map.setLayoutProperty("mesh_2021", "visibility", "visible");
+          document.querySelector("#header #option2021").className = "on";
+        }
       }
     </script>
   </body>
