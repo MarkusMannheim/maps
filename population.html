@@ -12,9 +12,9 @@
 
     <!-- metaphysics -->
     <meta charset="utf-8">
-    <title>Canberra housing</title>
+    <title>Canberra & Queanbeyan's population density</title>
     <meta name="author" content="Markus Mannheim">
-    <meta name="keywords" content="map, data, act, canberra, housing, houses, units, townhouses, dwellings">
+    <meta name="keywords" content="map, data, act, canberra, queanbeyan, population, density, census, 2021, 2016, 2011">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- scripts -->
@@ -29,6 +29,7 @@
 
   <body>
     <div id="map"></div>
+    <>
     <div id="header">
       <div id="option2011" onclick="yearToggle(2011)">2011</div>
       <div id="option2016" onclick="yearToggle(2016)">2016</div>
@@ -56,13 +57,13 @@
       gradient = d3.select("#gradient");
       legendGroup = d3.select("#legendGroup");
       axisGroup = d3.select("#axisGroup");
-      cities = {
-        Belconnen: [149.0661, -35.2386],
-        Civic: [149.126944, -35.293056],
-        Gungahlin: [149.133, -35.1831],
-        Queanbeyan: [149.234167, -35.353333],
-        Tuggeranong: [149.0888, -35.4244]
-      };
+      cities = [
+        { center: [149.0888, -35.4244], bearing: 30, zoom: 13, duration: 4000 },
+        { center: [149.234167, -35.353333], bearing: -60, zoom: 13, duration: 3000 },
+        { center: [149.133, -35.1831], bearing: 210, zoom: 12, duration: 3000 },
+        { center: [149.0661, -35.2386], bearing: 120, zoom: 12, duration: 3000 },
+        { center: [149.126944, -35.293056], bearing: 30, zoom: 12, duration: 4000 }
+      ];
 
       // load data
       Promise.all([
@@ -122,14 +123,19 @@
         map = new mapboxgl.Map({
           container: "map",
           style: "mapbox://styles/mapbox/light-v10",
-          center: cities.Civic,
-          zoom: 10,
+          center: cities[0].center,
+          zoom: 9,
           bearing: 30,
           pitch: 30,
           maxZoom: 16,
           minZoom: 9,
           attributionControl: false,
-          maxBounds: [148, -36, 150, -34]
+          maxBounds: [148, -36, 150, -34],
+          pitchWithRotate: false,
+          dragRotate: false,
+          touchZoomRotate: false,
+          scrollZoom: false,
+          dragPan: false
         });
 
         attrib = new mapboxgl.AttributionControl({
@@ -144,7 +150,14 @@
 
             d3.select("#map").transition()
               .duration(2000)
-              .style("opacity", 1);
+              .style("opacity", 1)
+              .on("end", function() {
+                introPhase = 0;
+                map.on("moveend", function() {
+                  if (introPhase < 5) intro();
+                });
+                intro();
+              });
 
             map.getStyle()
               .layers.map(function(d) {
@@ -217,6 +230,12 @@
           map.setLayoutProperty("mesh_2021", "visibility", "visible");
           document.querySelector("#header #option2021").className = "on";
         }
+      }
+
+      function intro() {
+        console.log("intro(), introPhase:", introPhase);
+        map.flyTo(cities[introPhase]);
+        introPhase++;
       }
     </script>
   </body>
