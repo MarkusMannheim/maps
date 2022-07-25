@@ -29,7 +29,7 @@
 
   <body>
     <div id="map"></div>
-    <>
+    <div id="banner"></div>
     <div id="header">
       <div id="option2011" onclick="yearToggle(2011)">2011</div>
       <div id="option2016" onclick="yearToggle(2016)">2016</div>
@@ -40,29 +40,29 @@
         <linearGradient id="gradient" x1="0%" x2="0%" y1="100%" y2="0%"></linearGradient>
       </defs>
       <g id="legendGroup">
-        <rect x=40 y=50 width=30 height=150></rect>
+        <rect x=40 y=60 width=30 height=125></rect>
         <text id="legendTitle">
-          <tspan x=55 y=10>population</tspan>
-          <tspan x=55 y=22>density</tspan>
-          <tspan x=55 y=37>(ppl/ha)</tspan>
+          <tspan x=55 y=20>population</tspan>
+          <tspan x=55 y=32>density</tspan>
+          <tspan x=55 y=47>(ppl/ha)</tspan>
         </text>
-        <g id="axisGroup" transform='translate(40, 50)'></g>
+        <g id="axisGroup" transform='translate(40, 60)'></g>
       </g>
-    </div>
+    </svg>
 
     <script>
       // elements
       header = d3.select("#header");
+      banner = d3.select("#banner");
       legend = d3.select("#legend");
       gradient = d3.select("#gradient");
       legendGroup = d3.select("#legendGroup");
       axisGroup = d3.select("#axisGroup");
       cities = [
-        { center: [149.0888, -35.4244], bearing: 30, zoom: 13, duration: 4000 },
-        { center: [149.234167, -35.353333], bearing: -60, zoom: 13, duration: 3000 },
-        { center: [149.133, -35.1831], bearing: 210, zoom: 12, duration: 3000 },
-        { center: [149.0661, -35.2386], bearing: 120, zoom: 12, duration: 3000 },
-        { center: [149.126944, -35.293056], bearing: 30, zoom: 12, duration: 4000 }
+        ["Tuggeranong", { center: [149.0888, -35.4244], bearing: 30, zoom: 12, duration: 4000 }],
+        ["Queanbeyan", { center: [149.234167, -35.353333], bearing: -60, zoom: 13, duration: 3000 }],
+        ["Gungahlin", { center: [149.133, -35.1831], bearing: 210, zoom: 13, duration: 3000 }],
+        ["Central Canberra", { center: [149.126944, -35.293056], bearing: 30, zoom: 12, duration: 4000 }]
       ];
 
       // load data
@@ -90,7 +90,7 @@
             .attr("stop-color", function(d) { return d3.interpolateYlOrRd(d); })
             .attr("offset", function(d) { return d * 100 + "%"; });
           axisScale = d3.scaleLinear()
-            .range([150, 112.5, 75, 37.5, 0])
+            .range([125, 93.75, 62.5, 31.25, 0])
             .domain([1, 210, 250, 340, 1060]);
           axis = d3.axisLeft(axisScale)
             .tickValues([1, 210, 250, 340, 1060])
@@ -123,7 +123,7 @@
         map = new mapboxgl.Map({
           container: "map",
           style: "mapbox://styles/mapbox/light-v10",
-          center: cities[0].center,
+          center: cities[0][1].center,
           zoom: 9,
           bearing: 30,
           pitch: 30,
@@ -131,7 +131,6 @@
           minZoom: 9,
           attributionControl: false,
           maxBounds: [148, -36, 150, -34],
-          pitchWithRotate: false,
           dragRotate: false,
           touchZoomRotate: false,
           scrollZoom: false,
@@ -139,7 +138,7 @@
         });
 
         attrib = new mapboxgl.AttributionControl({
-          customAttribution: "Australian Bureau of Statistics",
+          customAttribution: "Australian Bureau of Statistics, ABC analysis",
           compact: true
         });
         nav = new mapboxgl.NavigationControl();
@@ -147,6 +146,7 @@
         map.addControl(attrib, "bottom-left")
           .addControl(nav)
           .on("load", function() {
+            navDiv = d3.select(".mapboxgl-ctrl-top-right");
 
             d3.select("#map").transition()
               .duration(2000)
@@ -154,7 +154,22 @@
               .on("end", function() {
                 introPhase = 0;
                 map.on("moveend", function() {
-                  if (introPhase < 5) intro();
+                  if (introPhase < 4) {
+                    intro();
+                  } else {
+                    map.dragPan.enable();
+                    map.dragRotate.enable();
+                    map.scrollZoom.enable();
+                    d3.selectAll("#header, .mapboxgl-ctrl-top-right")
+                      .transition()
+                        .duration(1000)
+                        .style("opacity", 1)
+                        .style("pointer-events", "auto");
+                    banner.transition()
+                      .duration(1000)
+                      .style("opacity", 0)
+                      .remove();
+                  };
                 });
                 intro();
               });
@@ -233,8 +248,11 @@
       }
 
       function intro() {
-        console.log("intro(), introPhase:", introPhase);
-        map.flyTo(cities[introPhase]);
+        map.flyTo(cities[introPhase][1]);
+        banner.transition()
+          .duration(1000)
+          .style("opacity", 1)
+          .text(cities[introPhase][0]);
         introPhase++;
       }
     </script>
