@@ -35,7 +35,7 @@ body {
   color: #68788e;
   box-shadow: 1px 1px 4px #001533;
   display: flex;
-  font-family: ABCSansNovaBlack, "Arial Black", -webkit-bodyHelvetica, sans-serif;
+  font-family: ABCSansNovaBlack, "Arial Black", Helvetica, sans-serif;
   flex-flow: column;
   font-size: .95rem;
   pointer-events: none;
@@ -59,7 +59,7 @@ body {
 #banner {
   position: absolute;
   background: #037cc2;
-  font-family: ABCSansNovaBlack, "Arial Black", -webkit-bodyHelvetica, sans-serif;
+  font-family: ABCSansNovaBlack, "Arial Black", Helvetica, sans-serif;
   color: white;
   padding: .25rem .5rem;
   font-size: 1.5rem;

@@ -1,0 +1,119 @@
+@font-face {
+ font-family: ABCSansNovaRegular;
+ src: url(../fonts/ABCSansNova-Regular.otf);
+}
+@font-face {
+ font-family: ABCSansNovaBlack;
+ src: url(../fonts/ABCSansNova-Black.otf);
+}
+@font-face {
+ font-family: ABCSansNovaLight;
+ src: url(../fonts/ABCSansNova-Light.otf);
+}
+:root {
+  font-size: 1em;
+  font-family: ABCSansNovaRegular, Helvetica, sans-serif;
+  color: #001533;
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  overflow: hidden;
+}
+#container {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  flex-flow: column;
+}
+#selector {
+  position: fixed;
+  background: #037cc2;
+  color: white;
+  box-shadow: 1px 1px 4px #001533;
+  font-family: ABCSansNovaBlack, "Arial Black", Helvetica, sans-serif;
+  font-size: 1.1rem;
+  padding: .15rem;
+  cursor: pointer;
+  opacity: 0;
+  outline: none;
+}
+option {
+  background: white;
+  color: #68788e;
+  font-size: .9rem;
+  font-family: ABCSansNovaRegular, Helvetica, sans-serif;
+}
+#map {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+#border {
+  stroke: #8495a9;
+  stroke-dasharray: 2 3;
+  fill: none;
+}
+#water {
+  fill: #001533;
+  stroke: white;
+}
+.suburb {
+  stroke: white;
+  fill: #009de5;
+}
+.suburb.incorrect {
+  fill: #f26d00;
+}
+#key {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+.keyItem {
+  display: flex;
+}
+.keyItem:first-child {
+  margin-right: 1rem;
+}
+.keyItem div:first-child {
+  height: .9rem;
+  width: .9rem;
+  background: #009de5;
+  border-radius: 50%;
+  margin-right: .5rem;
+}
+.keyItem div:last-child {
+  line-height: .9rem;
+  font-size: .8rem;
+  font-weight: bold;
+  color: #037cc2;
+}
+.keyItem:last-child div:first-child {
+  background: #f26d00;
+}
+.keyItem:last-child div:last-child {
+  color: #cc4e00;
+}
+
+@media only screen and (max-width: 600px) {
+  #key {
+    margin-top: .5rem;
+  }
+  .keyItem:first-child {
+    margin-right: .75rem;
+  }
+  .keyItem div:first-child {
+    height: .8rem;
+    width: .8rem;
+    margin-right: .25rem;
+  }
+  .keyItem div:last-child {
+    line-height: .8rem;
+    font-size: .7rem;
+  }
+}

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-155991615-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag("js", new Date());
+      gtag("config", "UA-155991615-1");
+    </script>
+
+    <!-- metaphysics -->
+    <meta charset="utf-8">
+    <title>Canberra divided</title>
+    <meta name="author" content="Markus Mannheim">
+    <meta name="keywords" content="map, data, act, canberra, census, north, south, northside, southside, 2021">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- for scrapers -->
+    <meta property="og:title" content="Canberra divided">
+    <meta property="og:description" content="The strong statistical differences between northside and southside suburbs.">
+    <meta property="og:image" content="https://markusmannheim.github.io/maps/resources/canberraDivided.jpg">
+    <meta property="og:url" content="https://markusmannheim.github.io/maps/census.html">
+    <meta property="og:type" content="website">
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:site" content="@MarkusMannheim">
+    <meta property="twitter:creator" content="@MarkusMannheim">
+
+    <!-- scripts -->
+    <script src="./resources/d3.v7.min.js"></script>
+    <script src="./resources/topojson.v3.min.js"></script>
+    <script src="./resources/turf.min.js"></script>
+    <link href="./resources/census_style.css" rel="stylesheet">
+    <link href="./resources/abcLogo64.png" rel="icon">
+  </head>
+
+  <body>
+    <div id="container">
+      <svg id="map">
+        <g id="mapGroup"></g>
+      </svg>
+      <select id="selector" onchange="changeMap()"></select>
+      <div id="key">
+        <div class="keyItem">
+          <div></div>
+          <div>CORRECT</div>
+        </div>
+        <div class="keyItem">
+          <div></div>
+          <div>INCORRECT</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // elements
+      container = d3.select("#container");
+      selector = d3.select("#selector");
+      map = d3.select("#map");
+      mapGroup = d3.select("#mapGroup");
+      fields = [
+        "combined model",
+        "born in Vietnam",
+        "secular",
+        "aged under 25",
+        "earns $3,000+/wk",
+        "single parents"
+      ]
+
+      // load data
+      Promise.all([
+        d3.json("./data/act.topojson"),
+        d3.json("./data/water.topojson"),
+        d3.json("./data/census_suburbs.topojson"),
+      ]).then(function(data) {
+
+          // format data
+          border_data = topojson
+            .feature(data[0], data[0].objects.data);
+          water_data = topojson
+            .feature(data[1], data[1].objects.data);
+          suburb_data = topojson
+            .feature(data[2], data[2].objects.data);
+
+          // await fonts
+          document.fonts.onloadingdone = fontsReady();
+        });
+
+      function fontsReady() {
+        // await user (scroll to map)
+        loadTarget = document.querySelector("#map");
+
+        // set up frame activation
+        observer = new IntersectionObserver(loadFrame, {
+          threshold: 1
+        });
+        ready = false;
+        observer.observe(loadTarget);
+      }
+
+      function loadFrame(interactionObjects) {
+        interactionObjects.map(function(object) {
+          if (!ready && object.isIntersecting) drawMap();
+        });
+      }
+
+      function drawMap() {
+        projection = d3.geoConicEqualArea()
+          .parallels([-18, -36])
+          .rotate([-149.126944, 0]);
+
+        path = d3.geoPath()
+          .projection(projection);
+
+        border = mapGroup
+          .append("path")
+            .attr("id", "border")
+            .datum(border_data);
+
+        suburbs = mapGroup
+          .selectAll(".suburb")
+            .data(suburb_data.features)
+          .enter().append("path");
+
+        water = mapGroup
+          .append("path")
+            .attr("id", "water")
+            .datum(water_data);
+
+        options = selector
+          .selectAll("option")
+            .data(fields)
+          .enter().append("option")
+            .text(function(d) { return d; })
+            .property("value", function(d, i) { return i; });
+
+        changeMap();
+
+        window.addEventListener("resize", resize);
+        resize();
+
+        d3.selectAll("#selector, #map").transition()
+          .duration(1000)
+            .style("opacity", 1);
+      }
+
+      function resize() {
+        dimensions = document.getElementById("map").getBoundingClientRect();
+        width = dimensions.width;
+        height = dimensions.height;
+
+        projection.fitSize([width, height], suburb_data);
+        border.attr("d", path);
+        water.attr("d", path);
+        suburbs.attr("d", path);
+      }
+
+      function changeMap() {
+        choice = selector.property("value");
+        field = choice == 0 ? "prediction" : fields[choice];
+
+        suburbs.attr("class", function(d) {
+          return d.properties.north == d.properties[field] ? "correct suburb" : "incorrect suburb";
+        });
+      }
+    </script>
+  </body>
+</html>
