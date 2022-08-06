@@ -44,11 +44,11 @@
       <div id="key">
         <div class="keyItem">
           <div></div>
-          <div>CORRECT</div>
+          <div>STATISTICALLY NORTH</div>
         </div>
         <div class="keyItem">
           <div></div>
-          <div>INCORRECT</div>
+          <div>STATISTICALLY SOUTH</div>
         </div>
       </div>
     </div>
@@ -150,7 +150,7 @@
         width = dimensions.width;
         height = dimensions.height;
 
-        projection.fitSize([width, height], suburb_data);
+        projection.fitExtent([[0, 10], [width, height]], suburb_data);
         border.attr("d", path);
         water.attr("d", path);
         suburbs.attr("d", path);
@@ -158,10 +158,12 @@
 
       function changeMap() {
         choice = selector.property("value");
-        field = choice == 0 ? "prediction" : fields[choice];
+        field = choice == 0 ? "prediction"
+          : choice == 4 ? "earns $156,000+"
+          : fields[choice];
 
         suburbs.attr("class", function(d) {
-          return d.properties.north == d.properties[field] ? "correct suburb" : "incorrect suburb";
+          return d.properties[field] == 1 ? "north suburb" : "south suburb";
         });
       }
     </script>
