@@ -106,6 +106,8 @@
       }
 
       function drawMap() {
+        ready = true;
+
         projection = d3.geoConicEqualArea()
           .parallels([-18, -36])
           .rotate([-149.126944, 0]);
