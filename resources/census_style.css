@@ -61,13 +61,18 @@ option {
 #water {
   fill: #001533;
   stroke: white;
+  pointer-events: none;
 }
-.suburb {
+.suburb .shape {
   stroke: white;
   fill: #009de5;
+  pointer-events: none;
 }
-.suburb.south {
+.suburb.south .shape {
   fill: #f26d00;
+}
+.cell {
+  fill: rgba(0, 0, 0, 0);
 }
 #key {
   display: flex;
@@ -98,6 +103,16 @@ option {
 }
 .keyItem:last-child div:last-child {
   color: #cc4e00;
+}
+#tip {
+  position: absolute;
+  background: rgba(0, 21, 51, .75);
+  color: white;
+  font-size: .8rem;
+  padding: .25rem;
+  border-radius: .25rem;
+  opacity: 0;
+  pointer-events: none;
 }
 
 @media only screen and (max-width: 600px) {

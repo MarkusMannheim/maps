@@ -51,6 +51,7 @@
           <div>STATISTICALLY SOUTH</div>
         </div>
       </div>
+      <div id="tip"></div>
     </div>
 
     <script>
@@ -59,6 +60,7 @@
       selector = d3.select("#selector");
       map = d3.select("#map");
       mapGroup = d3.select("#mapGroup");
+      tip = d3.select("#tip");
       fields = [
         "combined model",
         "born in Vietnam",
@@ -82,6 +84,11 @@
             .feature(data[1], data[1].objects.data);
           suburb_data = topojson
             .feature(data[2], data[2].objects.data);
+          suburb_data.features = suburb_data.features
+            .map(function(d) {
+              d.properties.centroid = d3.geoCentroid(d);
+              return d;
+            });
 
           // await fonts
           document.fonts.onloadingdone = fontsReady();
@@ -123,7 +130,13 @@
         suburbs = mapGroup
           .selectAll(".suburb")
             .data(suburb_data.features)
-          .enter().append("path");
+          .enter().append("g");
+        suburbs.append("path")
+          .classed("shape", true);
+        suburbs.append("path")
+          .classed("cell", true)
+          .on("mouseover", over)
+          .on("mouseout", out);
 
         water = mapGroup
           .append("path")
@@ -153,9 +166,19 @@
         height = dimensions.height;
 
         projection.fitExtent([[0, 10], [width, height]], suburb_data);
+        centroids = suburb_data.features
+          .map(function(d) {
+            return projection(d.properties.centroid);
+          });
+        delaunay = d3.Delaunay.from(centroids);
+        voronoi = delaunay.voronoi([0, 0, width, height]);
+
         border.attr("d", path);
         water.attr("d", path);
-        suburbs.attr("d", path);
+        suburbs.select(".shape")
+          .attr("d", path);
+        suburbs.select(".cell")
+          .attr("d", function(d, i) { return voronoi.renderCell(i); });
       }
 
       function changeMap() {
@@ -167,6 +190,19 @@
         suburbs.attr("class", function(d) {
           return d.properties[field] == 1 ? "north suburb" : "south suburb";
         });
+      }
+
+      function over(event, d) {
+        tip.text(d.properties.name);
+        let tipWidth = parseFloat(tip.style("width"));
+        let tipHeight = parseFloat(tip.style("height"))
+        tip.style("top", projection(d.properties.centroid)[1] - tipHeight / 2 + "px")
+          .style("left", projection(d.properties.centroid)[0] - tipWidth / 2 + "px")
+          .style("opacity", 1);
+      };
+
+      function out() {
+        tip.style("opacity", 0);
       }
     </script>
   </body>
