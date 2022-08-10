@@ -100,7 +100,7 @@
 
         // set up frame activation
         observer = new IntersectionObserver(loadFrame, {
-          threshold: 1
+          threshold: .5
         });
         ready = false;
         observer.observe(loadTarget);
