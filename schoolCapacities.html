@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-155991615-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag("js", new Date());
+      gtag("config", "UA-155991615-1");
+    </script>
+
+    <!-- metaphysics -->
+    <meta charset="utf-8">
+    <title>ACT school capacities</title>
+    <meta name="author" content="Markus Mannheim">
+    <meta name="keywords" content="map, data, act, canberra, schools, public, crowded, enrolments, capacities">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- scripts -->
+    <script src="./resources/d3.v7.min.js"></script>
+    <script src="./resources/topojson.v3.min.js"></script>
+    <link href="./resources/school_style.css" rel="stylesheet">
+    <link href="./resources/abcLogo64.png" rel="icon">
+  </head>
+
+  <body>
+    <div id="container">
+      <svg id="map">
+        <g id="mapGroup"></g>
+        <g id="legendGroup">
+          <g id="legendAxis"></g>
+        </g>
+      </svg>
+      <select id="selector" onchange="changeMap()"></select>
+      <div id="footer">Note: Enrolments for schools marked * are for <span id="spanType"></span> students only.<span id="spanBreak"></span> Sources: ACT Education Directorate, ANU School of Demography</div>
+      <div id="tip"></div>
+    </div>
+
+    <script>
+      // elements
+      container = d3.select("#container");
+      selector = d3.select("#selector");
+      map = d3.select("#map");
+      mapGroup = d3.select("#mapGroup");
+      legendGroup = d3.select("#legendGroup");
+      legendAxis = d3.select("#legendAxis");
+      footer = d3.select("#footer");
+      tip = d3.select("#tip");
+      fields = [
+        ["primary schools", "primary"],
+        ["high schools", "high"],
+        ["colleges", "college"]
+      ];
+
+      // load data
+      Promise.all([
+        d3.json("./data/act.topojson"),
+        d3.json("./data/water.topojson"),
+        d3.json("./data/cbr_edges.topojson"),
+        d3.csv("./data/school_projections.csv"),
+      ]).then(function(data) {
+
+          // format data
+          border_data = topojson
+            .feature(data[0], data[0].objects.data);
+          water_data = topojson
+            .feature(data[1], data[1].objects.data);
+          suburb_data = topojson
+            .feature(data[2], data[2].objects.data);
+          school_data = {
+            type: "FeatureCollection",
+            features: data[3]
+              .filter(function(d) {
+                return d.capacity_now;
+              })
+              .map(function(d) {
+                for (i in Object.keys(d)) {
+                  let key = Object.keys(d)[i];
+                  if (!["district", "school", "type"].includes(key)) d[key] = +d[key];
+                }
+                return {
+                  type: "Feature",
+                  geometry: {
+                    type: "Point",
+                    coordinates: [d.lng, d.lat]
+                  },
+                  properties: {
+                    school: d.school,
+                    type: d.type,
+                    capacity: d.capacity,
+                    capacityLevel: d.year_2022 / d.capacity,
+                    enrolment: d.year_2022,
+                    predicted: d.year_2027
+                  }
+                };
+              })
+          };
+
+          // await fonts
+          document.fonts.onloadingdone = fontsReady();
+        });
+
+      function fontsReady() {
+        // await user (scroll to map)
+        loadTarget = document.querySelector("#map");
+
+        // set up frame activation
+        observer = new IntersectionObserver(loadFrame, {
+          threshold: .5
+        });
+        ready = false;
+        observer.observe(loadTarget);
+      }
+
+      function loadFrame(interactionObjects) {
+        interactionObjects.map(function(object) {
+          if (!ready && object.isIntersecting) drawMap();
+        });
+      }
+
+      function drawMap() {
+        ready = true;
+
+        projection = d3.geoConicEqualArea()
+          .parallels([-18, -36])
+          .rotate([-149.126944, 0]);
+
+        path = d3.geoPath()
+          .projection(projection);
+
+        border = mapGroup
+          .append("path")
+            .attr("id", "border")
+            .datum(border_data);
+
+        suburbs = mapGroup
+          .append("path")
+            .attr("id", "suburbs")
+            .datum(suburb_data);
+
+        water = mapGroup
+          .append("path")
+            .attr("id", "water")
+            .datum(water_data);
+
+        options = selector
+          .selectAll("option")
+            .data(fields)
+          .enter().append("option")
+            .text(function(d) { return d[0]; })
+            .property("value", function(d, i) { return i; });
+
+        categories = [
+          { floor: .85, colour: d3.schemeYlOrRd[4][3], text: "85% plus" },
+          { floor: .7, colour: d3.schemeYlOrRd[4][2], text: "70% to 85%" },
+          { floor: .55, colour: d3.schemeYlOrRd[4][1], text: "55% to 70%" },
+          { floor: null, colour: d3.schemeYlOrRd[4][0], text: "below 55%" }
+        ];
+
+        legendItems = legendGroup
+          .selectAll(".legendItem")
+            .data(categories)
+          .enter().append("g")
+            .classed("legendItem", true);
+        legendItems.append("circle")
+          .style("fill", function(d) { return d.colour; });
+        legendItems.append("text")
+          .text(function(d) { return d.text; });
+
+        window.addEventListener("resize", resize);
+        changeMap();
+
+        d3.selectAll("#selector, #map").transition()
+          .duration(1000)
+            .style("opacity", 1);
+      }
+
+      function resize() {
+        dimensions = document.getElementById("map").getBoundingClientRect();
+        width = dimensions.width;
+        height = dimensions.height;
+
+        hoverOff();
+
+        d3.select("#spanBreak").html(width < 500 ? "" : "<br>");
+
+        margins = { top: 16, right: 10, bottom: 10, left: 10 };
+
+        projection.fitExtent([[margins.left, margins.top], [width - margins.right, height - margins.bottom]], school_data);
+        path.pointRadius(width < 500 ? 6 : 8);
+
+        border.attr("d", path);
+        water.attr("d", path);
+        suburbs.attr("d", path);
+        d3.selectAll(".school .point")
+          .attr("d", path);
+
+        legendSize = width < 500 ? 7 : 9;
+
+        legendGroup.attr("transform", "translate(0, " + (height - legendSize * 15) + ")");
+        legendItems.select("circle")
+          .attr("r", legendSize * 1.5)
+          .attr("cx", legendSize * 1.5)
+          .attr("cy", function(d, i) { return legendSize * i * 3.5 + legendSize * 1.5; });
+        legendItems.select("text")
+          .attr("x", legendSize * 3.5)
+          .attr("y", function(d, i) { return legendSize * i * 3.5 + legendSize * 1.5; });
+
+        delaunay = d3.Delaunay.from(data.features.map(function(d) { return projection(d.geometry.coordinates); }));
+        voronoi = delaunay.voronoi([0, 0, width, height]);
+        cells.attr("d", function(d, i) { return voronoi.renderCell(i); });
+      }
+
+      function changeMap() {
+        choice = selector.property("value");
+        field = fields[choice][1];
+
+        footer.select("span").text(function() {
+          if (field == "college") {
+            return field;
+          } else {
+            return field + " school";
+          }
+        });
+
+        data = {
+          type: "FeatureCollection",
+          features: school_data
+            .features
+              .filter(function(d) {
+                return d.properties.type == field;
+              })
+        };
+
+        d3.selectAll(".school").remove();
+
+        schools = mapGroup
+          .selectAll(".school")
+            .data(data.features, function(d) { return d.properties.school.replace(" ", "") + field; })
+          .enter().append("g")
+            .classed("school", true);
+
+        schools.append("path")
+          .classed("point", true)
+          .style("fill", function(d) { return colours(d.properties.capacityLevel); });
+
+        cells = schools
+          .append("path")
+            .classed("cell", true)
+            .on("mouseover", hoverOn)
+            .on("mouseout", hoverOff);
+
+        resize();
+      }
+
+      function hoverOn(event, d) {
+        d3.select(this.parentNode)
+          .raise();
+        d3.select(this.parentNode)
+          .select(".point")
+            .style("fill", "white")
+            .style("stroke-width", 2);
+
+        tip.style("opacity", 0)
+          .style("left", "0px")
+          .style("top", "0px")
+          .html("<span>" + d.properties.school + "</span><br>"
+            + "<strong>" + d3.format(".1%")(d.properties.capacityLevel) + " full</strong><br>"
+            + "capacity: <strong>" + d3.format(",.0f")(d.properties.capacity) + "</strong><br>"
+            + "enrolment now: <strong>" + d3.format(",.0f")(d.properties.enrolment) + "</strong><br>"
+            + "5-year forecast: <strong>" + d3.format(",.0f")(d.properties.predicted) + "</strong><br>");
+
+        tipWidth = tip.node().getBoundingClientRect().width;
+        tipHeight = tip.node().getBoundingClientRect().height;
+
+        x = projection(d.geometry.coordinates)[0];
+        y = projection(d.geometry.coordinates)[1];
+
+        tip.style("left", function() {
+            if (x <= width / 2) {
+              return (x + 10) + "px";
+            } else {
+              return (x - tipWidth - 10) + "px";
+            }
+          })
+          .style("top", function() {
+            if (y > height / 2) {
+              return (y - 10 - tipHeight) + "px";
+            } else {
+              return (y + 10) + "px";
+            }
+          })
+          .style("opacity", 1);
+      }
+
+      function hoverOff() {
+        d3.selectAll(".school .point")
+          .style("fill", function(d) { return colours(d.properties.capacityLevel); })
+          .style("stroke-width", .5);
+        tip.style("opacity", 0);
+      }
+
+      function colours(value) {
+        for (i in categories) {
+          if (value > categories[i].floor) {
+            return categories[i].colour;
+            break;
+          } else if (i == 3) {
+            return categories[i].colour;
+            break;
+          }
+        };
+      }
+    </script>
+  </body>
+</html>
