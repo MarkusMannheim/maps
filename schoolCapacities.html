@@ -33,7 +33,7 @@
         </g>
       </svg>
       <select id="selector" onchange="changeMap()"></select>
-      <div id="footer">Note: Enrolments for schools marked * are for <span id="spanType"></span> students only.<span id="spanBreak"></span> Sources: ACT Education Directorate, ANU School of Demography</div>
+      <div id="footer">Note: Enrolments for schools marked * are for primary and high school years combined.<span id="spanBreak"></span> Sources: ACT Education Directorate, ANU School of Demography</div>
       <div id="tip"></div>
     </div>
 
@@ -198,7 +198,7 @@
 
         legendSize = width < 500 ? 7 : 9;
 
-        legendGroup.attr("transform", "translate(0, " + (height - legendSize * 15) + ")");
+        legendGroup.attr("transform", "translate(1, " + (height - legendSize * 15) + ")");
         legendItems.select("circle")
           .attr("r", legendSize * 1.5)
           .attr("cx", legendSize * 1.5)
@@ -216,20 +216,14 @@
         choice = selector.property("value");
         field = fields[choice][1];
 
-        footer.select("span").text(function() {
-          if (field == "college") {
-            return field;
-          } else {
-            return field + " school";
-          }
-        });
-
         data = {
           type: "FeatureCollection",
           features: school_data
             .features
               .filter(function(d) {
-                return d.properties.type == field;
+                return field == "college" ? d.properties.type == "college" :
+                  field == "primary" ? d.properties.type == "primary" || d.properties.type == "combo" :
+                  d.properties.type == "high" || d.properties.type == "combo";
               })
         };
 
