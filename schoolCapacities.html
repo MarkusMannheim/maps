@@ -183,7 +183,13 @@
 
         hoverOff();
 
-        d3.select("#spanBreak").html(width < 500 ? "" : "<br>");
+        d3.select("#spanBreak").html(function() {
+          if (field == "high") {
+            return width < 500 ? " Melba Copland Secondary enrolments are for high school and college." : " Melba Copland Secondary enrolments are for high school and college.<br>";
+          } else {
+            return width < 500 ? "" : "<br>";
+          }
+        });
 
         margins = { top: 16, right: 10, bottom: 10, left: 10 };
 
