@@ -183,13 +183,7 @@
 
         hoverOff();
 
-        d3.select("#spanBreak").html(function() {
-          if (field == "high") {
-            return width < 500 ? " Melba Copland Secondary enrolments are for high school and college." : " Melba Copland Secondary enrolments are for high school and college.<br>";
-          } else {
-            return width < 500 ? "" : "<br>";
-          }
-        });
+        d3.select("#spanBreak").html(width < 500 ? "" : "<br>");
 
         margins = { top: 16, right: 10, bottom: 10, left: 10 };
 
@@ -274,7 +268,11 @@
             + "<strong>" + d3.format(".1%")(d.properties.capacityLevel) + " full</strong><br>"
             + "capacity: <strong>" + d3.format(",.0f")(d.properties.capacity) + "</strong><br>"
             + "enrolment now: <strong>" + d3.format(",.0f")(d.properties.enrolment) + "</strong><br>"
-            + "5-year forecast: <strong>" + d3.format(",.0f")(d.properties.predicted) + "</strong><br>");
+            + "5-year forecast: <strong>" + d3.format(",.0f")(d.properties.predicted) + "</strong>");
+
+        if (d.properties.school == "Melba Copland Secondary*") {
+          tip.html(tip.html() + "<br>(<em>enrolments are high school and college students</em>)");
+        };
 
         tipWidth = tip.node().getBoundingClientRect().width;
         tipHeight = tip.node().getBoundingClientRect().height;
