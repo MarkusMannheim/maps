@@ -33,7 +33,7 @@
         </g>
       </svg>
       <select id="selector" onchange="changeMap()"></select>
-      <div id="footer">Note: Enrolments for schools marked * are for primary and high school years combined.<span id="spanBreak"></span> Sources: ACT Education Directorate, ANU School of Demography</div>
+      <div id="footer">Note: Enrolments for schools marked * are for <span id="schoolType">primary and high school</span> years combined.<span id="spanBreak"></span> Sources: ACT Education Directorate, ANU School of Demography</div>
       <div id="tip"></div>
     </div>
 
@@ -216,14 +216,19 @@
         choice = selector.property("value");
         field = fields[choice][1];
 
+        d3.select("#schoolType").text(function() {
+          return field == "college" ? "high school and college":
+            "primary and high school";
+        });
+
         data = {
           type: "FeatureCollection",
           features: school_data
             .features
               .filter(function(d) {
-                return field == "college" ? d.properties.type == "college" :
+                return field == "college" ? d.properties.type == "college" || d.properties.type == "highCollege" :
                   field == "primary" ? d.properties.type == "primary" || d.properties.type == "combo" :
-                  d.properties.type == "high" || d.properties.type == "combo";
+                  d.properties.type == "high" || d.properties.type == "combo" || d.properties.type == "highCollege";
               })
         };
 
