@@ -165,7 +165,9 @@
         width = dimensions.width;
         height = dimensions.height;
 
-        projection.fitSize([width, height], rainData);        
+        margin = width * .05
+
+        projection.fitExtent([[-margin, -margin], [width + margin, height + margin]], rainData);
         path.pointRadius(width * .01);
 
         legend.select("rect")
