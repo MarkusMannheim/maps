@@ -31,7 +31,7 @@
     <script src="./resources/d3.v7.min.js"></script>
     <script src="./resources/topojson.v3.min.js"></script>
     <script src="./resources/turf.min.js"></script>
-    <link href="./resources/rainfallStyle.css" rel="stylesheet">
+    <link href="./resources/rainMapStyle.css" rel="stylesheet">
     <link href="./resources/abcLogo64.png" rel="icon">
   </head>
 
@@ -41,7 +41,7 @@
         <g id="mapGroup"></g>
       </svg>
       <div id="header">
-        <div>RAIN GAUGES</div>
+        <div>ESTIMATED RAIN</div>
       </div>
       <div id="key">
         <div>Rainfall compared with airport</div>
@@ -69,14 +69,14 @@
       
       // load data
       Promise.all([
-        d3.json("./data/actWeather.geojson"),
+        d3.json("./data/actWeatherGrid.geojson"),
         d3.json("./data/act.topojson"),
         d3.json("./data/water.topojson"),
         d3.json("./data/census_suburbs.topojson")
       ]).then(function(data) {
 
           // format data
-          stationData = data[0];
+          rainData = data[0];
           borderData = topojson
             .feature(data[1], data[1].objects.data);
           waterData = topojson
@@ -117,6 +117,16 @@
         path = d3.geoPath()
           .projection(projection);
 
+        gradient.selectAll("stop")
+          .data(d3.range(0, 11))
+        .enter().append("stop")
+          .attr("offset", function(d) { return d * 10 + "%"; })
+          .attr("stop-color", function(d) { return d3.interpolateYlGnBu(d / 10); });
+
+        densityLayer = mapGroup
+          .append("g")
+            .attr("id", "densityLayer");
+
         border = mapGroup
           .append("path")
             .attr("id", "border")
@@ -133,21 +143,8 @@
             .attr("id", "water")
             .datum(waterData);
 
-        gradient.selectAll("stop")
-          .data(d3.range(0, 11))
-        .enter().append("stop")
-          .attr("offset", function(d) { return d * 10 + "%"; })
-          .attr("stop-color", function(d) { return d3.interpolateYlGnBu(d / 10); });
-
         colours = d3.scaleSequential(d3.interpolateYlGnBu)
-          .domain(d3.extent(stationData.features.map(function(d) { return d.properties.variation; })));
-
-        stations = mapGroup
-          .selectAll(".station")
-            .data(stationData.features)
-          .enter().append("path")
-            .classed("station", true)
-            .style("fill", function(d) { return colours(d.properties.variation); });
+          .domain(d3.extent(rainData.features.map(function(d) { return d.properties.variation; })));
 
         x = d3.scaleLinear()
           .domain(colours.domain());
@@ -168,10 +165,8 @@
         width = dimensions.width;
         height = dimensions.height;
 
-        margin = width * 0.05;
-
-        projection.fitExtent([[margin * 3, margin * 2], [width - margin, height - margin]], stationData);        
-        path.pointRadius(margin * .35);
+        projection.fitSize([width, height], rainData);        
+        path.pointRadius(width * .01);
 
         legend.select("rect")
           .attr("width", width * .9)
@@ -181,8 +176,41 @@
         legendAxis.attr("transform", "translate(0, " + (width <= 500 ?  20 : 25) + ")")
           .call(axis);
 
-        d3.selectAll("#border, #water, .suburb, .station")
-          .attr("d", path);
+        densityData = [];
+        densityBins = d3.scaleQuantile()
+          .domain(d3.extent(rainData.features.map(function(d) { return d.properties.variation; })))
+          .range(d3.range(16));
+          
+        rainData.features.forEach(function(d) {
+          for (i=0; i <= densityBins(d.properties.variation); i++) {
+            densityData.push({
+              type: "Feature",
+              geometry: d.geometry
+            });
+          }
+        });
+        
+        density = d3.contourDensity()
+          .x(function(d) { return projection(d.geometry.coordinates)[0]; })
+          .y(function(d) { return projection(d.geometry.coordinates)[1]; })
+          .size([width, height])
+          (densityData);
+
+        colours.domain(d3.extent(density.map(function(d) { return d.value; })));
+
+        densities = densityLayer
+          .selectAll(".density")
+            .data(density);
+        densities.exit()
+          .remove();
+        densities.enter()
+          .append("path")
+            .classed("density", true)
+            .style("fill", function(d) { return colours(d.value); })
+            .attr("d", function(d) { return d3.geoPath()(d)});
+
+        mapGroup.selectAll("#border, #water, .suburb")
+          .attr("d", path);       
       }
       
     </script>

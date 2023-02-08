@@ -1,0 +1,108 @@
+@font-face {
+  font-family: ABCSansNovaRegular;
+  src: url(../fonts/ABCSansNova-Regular.otf);
+}
+@font-face {
+font-family: ABCSansNovaBlack;
+src: url(../fonts/ABCSansNova-Black.otf);
+}
+@font-face {
+font-family: ABCSansNovaLight;
+src: url(../fonts/ABCSansNova-Light.otf);
+}
+
+:root {
+  font-size: 1em;
+  font-family: ABCSansNovaRegular, Helvetica, sans-serif;
+  color: #001533;
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  overflow: hidden;
+}
+#container {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-flow: column;
+}
+#map {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+#header {
+  position: fixed;
+  display: flex;
+}
+#header div {
+  background: #001533;
+  color: white;
+  font-family: ABCSansNovaBlack, "Arial Black", Helvetica, sans-serif;
+  font-size: 1.2rem;
+  padding: 3px 6px;
+}
+#border {
+  stroke: white;
+  stroke-dasharray: 2 3;
+  stroke-width: 2;
+  fill: none;
+}
+#water {
+  fill: #001533;
+  pointer-events: none;
+}
+.suburb {
+  stroke: white;  
+  stroke-width: 2;
+  fill: none;
+  pointer-events: none;
+}
+#key {  
+  display: flex;
+  flex-flow: column;  
+}
+#key div {
+  font-size: .9rem;
+  text-align: center;
+  margin: .75rem 0 .25rem 0;
+}
+#legend {
+  height: 50px;
+}
+#legend rect {
+  stroke: #001533;
+  height: 25px;
+  fill: url(#gradient);
+}
+#legendAxis .domain {
+  stroke: none;
+}
+#legendAxis .tick line {
+  stroke: #001533;
+}
+#legendAxis .tick text {
+  fill: #001533;
+  font-size: .7rem;
+}
+
+@media only screen and (max-width: 500px) {
+  #header div {
+    font-size: 1rem;
+  }  
+  #key div {
+    font-size: .8rem;
+    margin: .5rem 0 .25rem 0;
+  }
+  #legend {
+    height: 45px;
+  }
+  #legend rect {
+    height: 20px;
+  }
+  #legendAxis .tick text {
+    font-size: .65rem;
+  }
+}
