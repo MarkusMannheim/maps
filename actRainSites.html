@@ -170,7 +170,7 @@
 
         margin = width * 0.05;
 
-        projection.fitExtent([[margin * 3, margin], [width - margin, height - margin]], stationData);        
+        projection.fitExtent([[margin * 3, margin * 2], [width - margin, height - margin]], stationData);        
         path.pointRadius(margin * .35);
 
         legend.select("rect")
