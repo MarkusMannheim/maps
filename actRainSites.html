@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-155991615-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag("js", new Date());
+      gtag("config", "UA-155991615-1");
+    </script>
+
+    <!-- metaphysics -->
+    <meta charset="utf-8">
+    <title>ACT rainfall data</title>
+    <meta name="author" content="Markus Mannheim">
+    <meta name="keywords" content="map, data, act, canberra, queanbeyan, rainfall, precipitation, weather, climate">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- for scrapers -->
+    <meta property="og:title" content="ACT rainfall">
+    <meta property="og:description" content="A visualisation of rainfall levels over the past 30 years.">
+    <!-- <meta property="og:image" content="https://markusmannheim.github.io/maps/resources/populationDensity.jpg">
+    <meta property="og:url" content="https://markusmannheim.github.io/maps/population.html"> -->
+    <meta property="og:type" content="website">
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:site" content="@MarkusMannheim">
+    <meta property="twitter:creator" content="@MarkusMannheim">
+
+    <!-- scripts -->
+    <script src="./resources/d3.v7.min.js"></script>
+    <script src="./resources/topojson.v3.min.js"></script>
+    <script src="./resources/turf.min.js"></script>
+    <link href="./resources/rainfallStyle.css" rel="stylesheet">
+    <link href="./resources/abcLogo64.png" rel="icon">
+  </head>
+
+  <body>
+    <div id="container">      
+      <svg id="map">
+        <g id="mapGroup"></g>
+      </svg>
+      <div id="header">
+        <div>WEATHER STATIONS</div>
+      </div>
+      <div id="key">
+        <div>Rainfall compared with airport</div>
+        <svg id="legend">
+          <defs>
+            <linearGradient id="gradient" x1="0%" x2="100%"></linearGradient>
+          </defs>
+          <rect></rect>
+          <g id="legendAxis"></g>
+        </svg>
+      </div>
+      <div id="tip"></div>
+    </div>
+
+    <script>
+      // elements
+      container = d3.select("#container");
+      header = d3.select("#header");
+      map = d3.select("#map");
+      mapGroup = d3.select("#mapGroup");
+      legend = d3.select("#legend");
+      gradient = d3.select("#gradient");
+      legendAxis = d3.select("#legendAxis");
+      tip = d3.select("#tip");
+      
+      // load data
+      Promise.all([
+        d3.json("./data/actWeather.geojson"),
+        d3.json("./data/act.topojson"),
+        d3.json("./data/water.topojson"),
+        d3.json("./data/census_suburbs.topojson")
+      ]).then(function(data) {
+
+          // format data
+          stationData = data[0];
+          borderData = topojson
+            .feature(data[1], data[1].objects.data);
+          waterData = topojson
+            .feature(data[2], data[2].objects.data);
+          suburbData = topojson
+            .feature(data[3], data[3].objects.data);
+
+          // await fonts
+          document.fonts.onloadingdone = fontsReady();
+
+        });
+
+      function fontsReady() {
+        // await user (scroll to map)
+        loadTarget = document.querySelector("#map");
+
+        // set up frame activation
+        observer = new IntersectionObserver(loadFrame, {
+          threshold: .5
+        });
+        ready = false;
+        observer.observe(loadTarget);
+      }
+
+      function loadFrame(interactionObjects) {
+        interactionObjects.map(function(object) {
+          if (!ready && object.isIntersecting) drawMap();
+        });
+      }
+
+      function drawMap() {
+        ready = true;
+
+        projection = d3.geoConicEqualArea()
+          .parallels([-18, -36])
+          .rotate([-149.126944, 0]);
+
+        path = d3.geoPath()
+          .projection(projection);
+
+        border = mapGroup
+          .append("path")
+            .attr("id", "border")
+            .datum(borderData);
+
+        suburbs = mapGroup
+          .selectAll(".suburb")
+            .data(suburbData.features)
+          .enter().append("path")
+          .classed("suburb", true);
+
+        water = mapGroup
+          .append("path")
+            .attr("id", "water")
+            .datum(waterData);
+
+        gradient.selectAll("stop")
+          .data(d3.range(0, 11))
+        .enter().append("stop")
+          .attr("offset", function(d) { return d * 10 + "%"; })
+          .attr("stop-color", function(d) { return d3.interpolateYlGnBu(d / 10); });
+
+        colours = d3.scaleSequential(d3.interpolateYlGnBu)
+          .domain(d3.extent(stationData.features.map(function(d) { return d.properties.variation; })));
+
+        stations = mapGroup
+          .selectAll(".station")
+            .data(stationData.features)
+          .enter().append("path")
+            .classed("station", true)
+            .style("fill", function(d) { return colours(d.properties.variation); });
+
+        x = d3.scaleLinear()
+          .domain(colours.domain());
+
+        axis = d3.axisBottom(x)
+          .ticks(5, "+.0%");
+
+        window.addEventListener("resize", resize);
+        resize();
+
+        map.transition()
+          .duration(1000)
+            .style("opacity", 1);
+      }
+
+      function resize() {
+        dimensions = document.getElementById("map").getBoundingClientRect();
+        width = dimensions.width;
+        height = dimensions.height;
+
+        margin = width * 0.05;
+
+        projection.fitExtent([[margin * 3, margin], [width - margin, height - margin]], stationData);        
+        path.pointRadius(margin * .35);
+
+        legend.select("rect")
+          .attr("width", width * .9)
+          .attr("x", width * .05);
+        
+        x.range([width * .05, width * .9]);
+        legendAxis.attr("transform", "translate(0, " + (width <= 500 ?  20 : 25) + ")")
+          .call(axis);
+
+        d3.selectAll("#border, #water, .suburb, .station")
+          .attr("d", path);
+      }
+      
+    </script>
+  </body>
+</html>

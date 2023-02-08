@@ -188,7 +188,7 @@
         margins = { top: 16, right: 10, bottom: 10, left: 10 };
 
         projection.fitExtent([[margins.left, margins.top], [width - margins.right, height - margins.bottom]], school_data);
-        path.pointRadius(width < 500 ? 6 : 8);
+        path.pointRadius(width < 500 ? 6 : 10);
 
         border.attr("d", path);
         water.attr("d", path);
@@ -221,16 +221,17 @@
             "primary and high school";
         });
 
-        data = {
-          type: "FeatureCollection",
-          features: school_data
-            .features
-              .filter(function(d) {
-                return field == "college" ? d.properties.type == "college" || d.properties.type == "highCollege" :
-                  field == "primary" ? d.properties.type == "primary" || d.properties.type == "combo" :
-                  d.properties.type == "high" || d.properties.type == "combo" || d.properties.type == "highCollege";
-              })
-        };
+        data = school_data;
+        // data = {
+        //   type: "FeatureCollection",
+        //   features: school_data
+        //     .features
+        //       .filter(function(d) {
+        //         return field == "college" ? d.properties.type == "college" || d.properties.type == "highCollege" :
+        //           field == "primary" ? d.properties.type == "primary" || d.properties.type == "combo" :
+        //           d.properties.type == "high" || d.properties.type == "combo" || d.properties.type == "highCollege";
+        //       })
+        // };
 
         d3.selectAll(".school").remove();
 

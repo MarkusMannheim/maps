@@ -1,0 +1,22 @@
+{
+"type": "FeatureCollection",
+"features": [
+{ "type": "Feature", "properties": { "school": "Alfred Deakin High" }, "geometry": { "type": "Point", "coordinates": [ 149.0946442, -35.32424542 ] } },
+{ "type": "Feature", "properties": { "school": "Belconnen High" }, "geometry": { "type": "Point", "coordinates": [ 149.0389237, -35.24711455 ] } },
+{ "type": "Feature", "properties": { "school": "Campbell High" }, "geometry": { "type": "Point", "coordinates": [ 149.14778, -35.2780636 ] } },
+{ "type": "Feature", "properties": { "school": "Canberra High" }, "geometry": { "type": "Point", "coordinates": [ 149.0744475, -35.25154382 ] } },
+{ "type": "Feature", "properties": { "school": "Evelyn Scott School" }, "geometry": { "type": "Point", "coordinates": [ 149.0273716, -35.30678179 ] } },
+{ "type": "Feature", "properties": { "school": "Fraser Primary" }, "geometry": { "type": "Point", "coordinates": [ 149.043144399999989, -35.19197227 ] } },
+{ "type": "Feature", "properties": { "school": "Hawker Primary" }, "geometry": { "type": "Point", "coordinates": [ 149.0347227, -35.24988483 ] } },
+{ "type": "Feature", "properties": { "school": "Lyneham High" }, "geometry": { "type": "Point", "coordinates": [ 149.1305519, -35.25245947 ] } },
+{ "type": "Feature", "properties": { "school": "Majura Primary" }, "geometry": { "type": "Point", "coordinates": [ 149.154627799999986, -35.23838146 ] } },
+{ "type": "Feature", "properties": { "school": "Margaret Hendry School" }, "geometry": { "type": "Point", "coordinates": [ 149.109208599999988, -35.15087484 ] } },
+{ "type": "Feature", "properties": { "school": "Mawson Primary" }, "geometry": { "type": "Point", "coordinates": [ 149.0977706, -35.35849341 ] } },
+{ "type": "Feature", "properties": { "school": "Narrabundah College" }, "geometry": { "type": "Point", "coordinates": [ 149.147206899999986, -35.33619656 ] } },
+{ "type": "Feature", "properties": { "school": "Red Hill Primary" }, "geometry": { "type": "Point", "coordinates": [ 149.1332282, -35.33946042 ] } },
+{ "type": "Feature", "properties": { "school": "Southern Cross Early Childhood" }, "geometry": { "type": "Point", "coordinates": [ 149.0349757, -35.2319682 ] } },
+{ "type": "Feature", "properties": { "school": "Throsby School" }, "geometry": { "type": "Point", "coordinates": [ 149.1649482, -35.19316702 ] } },
+{ "type": "Feature", "properties": { "school": "UC SSC Lake Ginninderra" }, "geometry": { "type": "Point", "coordinates": [ 149.073755, -35.2390998 ] } },
+{ "type": "Feature", "properties": { "school": "Weetangera Primary" }, "geometry": { "type": "Point", "coordinates": [ 149.047624899999988, -35.25195848 ] } }
+]
+}

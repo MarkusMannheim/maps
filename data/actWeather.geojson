@@ -1,0 +1,26 @@
+{
+"type": "FeatureCollection",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::7844" } },
+"features": [
+{ "type": "Feature", "properties": { "station": 70232, "name": "Sutton", "variation": 0.064931247646253798 }, "geometry": { "type": "Point", "coordinates": [ 149.26, -35.25 ] } },
+{ "type": "Feature", "properties": { "station": 70056, "name": "Kowen Forest", "variation": 0.094534334704696743 }, "geometry": { "type": "Point", "coordinates": [ 149.28, -35.3 ] } },
+{ "type": "Feature", "properties": { "station": 70255, "name": "Exhibition Park", "variation": 0.12459837019790454 }, "geometry": { "type": "Point", "coordinates": [ 149.15, -35.23 ] } },
+{ "type": "Feature", "properties": { "station": 70340, "name": "Gungahlin Lakes)", "variation": 0.12220152012539542 }, "geometry": { "type": "Point", "coordinates": [ 149.11, -35.18 ] } },
+{ "type": "Feature", "properties": { "station": 70000, "name": "Tyson Street", "variation": 0.069655717878649659 }, "geometry": { "type": "Point", "coordinates": [ 149.14, -35.26 ] } },
+{ "type": "Feature", "properties": { "station": 70351, "name": "Canberra Airport", "variation": 0.0 }, "geometry": { "type": "Point", "coordinates": [ 149.2, -35.31 ] } },
+{ "type": "Feature", "properties": { "station": 70307, "name": "Australian Instituteof Sport", "variation": 0.16544783553704057 }, "geometry": { "type": "Point", "coordinates": [ 149.11, -35.25 ] } },
+{ "type": "Feature", "properties": { "station": 70169, "name": "CSIRO Ginninderra", "variation": 0.30541179949726449 }, "geometry": { "type": "Point", "coordinates": [ 149.08, -35.2 ] } },
+{ "type": "Feature", "properties": { "station": 70247, "name": "Australian National Botanic Gardens", "variation": 0.18182184798038459 }, "geometry": { "type": "Point", "coordinates": [ 149.11, -35.28 ] } },
+{ "type": "Feature", "properties": { "station": 70246, "name": "Parliament House", "variation": 0.15885774168194922 }, "geometry": { "type": "Point", "coordinates": [ 149.13, -35.31 ] } },
+{ "type": "Feature", "properties": { "station": 70072, "name": "Queanbeyan bowling club", "variation": 0.043702643942963304 }, "geometry": { "type": "Point", "coordinates": [ 149.23, -35.36 ] } },
+{ "type": "Feature", "properties": { "station": 70277, "name": "Verbrugghen Street", "variation": 0.16824484620418834 }, "geometry": { "type": "Point", "coordinates": [ 149.05, -35.21 ] } },
+{ "type": "Feature", "properties": { "station": 70242, "name": "Bindaga Street", "variation": 0.064887157070237622 }, "geometry": { "type": "Point", "coordinates": [ 149.07, -35.26 ] } },
+{ "type": "Feature", "properties": { "station": 70015, "name": "Forestry", "variation": 0.081841288169484105 }, "geometry": { "type": "Point", "coordinates": [ 149.1, -35.3 ] } },
+{ "type": "Feature", "properties": { "station": 70249, "name": "Federal Gold Club", "variation": 0.1082388659546123 }, "geometry": { "type": "Point", "coordinates": [ 149.11, -35.33 ] } },
+{ "type": "Feature", "properties": { "station": 70256, "name": "Bernacchi Street", "variation": 0.14428765951293565 }, "geometry": { "type": "Point", "coordinates": [ 149.1, -35.36 ] } },
+{ "type": "Feature", "properties": { "station": 70231, "name": "Stromlo Forest", "variation": 0.26773853395514657 }, "geometry": { "type": "Point", "coordinates": [ 149.05, -35.33 ] } },
+{ "type": "Feature", "properties": { "station": 70308, "name": "Darke Street", "variation": 0.17552858751407485 }, "geometry": { "type": "Point", "coordinates": [ 149.09, -35.38 ] } },
+{ "type": "Feature", "properties": { "station": 70339, "name": "Isabella Plains", "variation": 0.081600082372323079 }, "geometry": { "type": "Point", "coordinates": [ 149.09, -35.42 ] } },
+{ "type": "Feature", "properties": { "station": 70292, "name": "Murrumbidgee Country Club", "variation": 0.25040525739320918 }, "geometry": { "type": "Point", "coordinates": [ 149.04, -35.39 ] } }
+]
+}

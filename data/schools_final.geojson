@@ -1,0 +1,7 @@
+{
+"type": "FeatureCollection",
+"features": [
+{ "type": "Feature", "properties": { "school": "Gungahlin College" }, "geometry": { "type": "Point", "coordinates": [ 149.1310174, -35.18539477 ] } },
+{ "type": "Feature", "properties": { "school": "The Canberra College" }, "geometry": { "type": "Point", "coordinates": [ 149.0892359, -35.34040281 ] } }
+]
+}
