@@ -35,7 +35,7 @@ body {
 }
 #header {
   position: fixed;
-  display: none;
+  display: flex;
 }
 #header div {
   background: #001533;
@@ -61,7 +61,7 @@ body {
   pointer-events: none;
 }
 #key {  
-  display: none;
+  display: flex;
   flex-flow: column;  
 }
 #key div {
