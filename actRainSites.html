@@ -145,9 +145,15 @@
         stations = mapGroup
           .selectAll(".station")
             .data(stationData.features)
-          .enter().append("path")
-            .classed("station", true)
-            .style("fill", function(d) { return colours(d.properties.variation); });
+          .enter().append("g")
+            .classed("station", true);
+        stations.append("path")
+          .classed("shape", true)
+            .style("fill", function(d) { return colours(d.properties.variation); });            
+        stations.append("path")
+          .classed("cell", true)
+          .on("mouseover", over)
+          .on("mouseout", out);
 
         x = d3.scaleLinear()
           .domain(colours.domain());
@@ -173,6 +179,9 @@
         projection.fitExtent([[margin * 3, margin * 2], [width - margin, height - margin]], stationData);        
         path.pointRadius(margin * .35);
 
+        delaunay = d3.Delaunay.from(stationData.features.map(function(d) { return projection(d.geometry.coordinates); }));
+        voronoi = delaunay.voronoi([0, 0, width, height]);
+
         legend.select("rect")
           .attr("width", width * .9)
           .attr("x", width * .05);
@@ -181,8 +190,24 @@
         legendAxis.attr("transform", "translate(0, " + (width <= 500 ?  20 : 25) + ")")
           .call(axis);
 
-        d3.selectAll("#border, #water, .suburb, .station")
+        d3.selectAll("#border, #water, .suburb, .station .shape")
           .attr("d", path);
+
+        stations.select(".cell")
+          .attr("d", function(d, i) { return voronoi.renderCell(i); });
+      }
+
+      function over(event, d) {
+        tip.text(d.properties.name);
+        let tipWidth = parseFloat(tip.style("width"));
+        let tipHeight = parseFloat(tip.style("height"))
+        tip.style("top", projection(d.geometry.coordinates)[1] - tipHeight / 2 + 16 + "px")
+          .style("left", projection(d.geometry.coordinates)[0] - tipWidth / 2 + "px")
+          .style("opacity", 1);
+      };
+
+      function out() {
+        tip.style("opacity", 0);
       }
       
     </script>

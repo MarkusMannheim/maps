@@ -59,9 +59,11 @@ body {
   fill: whitesmoke;
   pointer-events: none;
 }
-.station {
-  fill: red;
+.station .shape {  
   stroke: #001533;
+}
+.station .cell {
+  fill: rgba(0, 0, 0, 0);
 }
 #key {  
   display: flex;
@@ -89,6 +91,16 @@ body {
 #legendAxis .tick text {
   fill: #001533;
   font-size: .7rem;
+}
+#tip {
+  position: absolute;
+  background: rgba(0, 21, 51, .75);
+  color: white;
+  font-size: .8rem;
+  padding: .25rem;
+  border-radius: .25rem;
+  opacity: 0;
+  pointer-events: none;
 }
 
 @media only screen and (max-width: 500px) {
