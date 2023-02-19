@@ -41,13 +41,13 @@ body {
   background: #001533;
   color: white;
   font-family: ABCSansNovaBlack, "Arial Black", Helvetica, sans-serif;
-  font-size: 1.2rem;
+  font-size: 1.75rem;
   padding: 3px 6px;
 }
 #border {
   stroke: white;
-  stroke-dasharray: 2 3;
-  stroke-width: 2;
+  stroke-dasharray: 3 5;
+  stroke-width: 3;
   fill: none;
 }
 #water {
@@ -56,7 +56,7 @@ body {
 }
 .suburb {
   stroke: white;  
-  stroke-width: 2;
+  stroke-width: 3;
   fill: none;
   pointer-events: none;
 }
@@ -65,9 +65,10 @@ body {
   flex-flow: column;  
 }
 #key div {
-  font-size: .9rem;
+  font-size: 1rem;
+  font-weight: bold;
   text-align: center;
-  margin: .75rem 0 .25rem 0;
+  margin: 1rem 0 .4rem 0;
 }
 #legend {
   height: 50px;
@@ -85,7 +86,7 @@ body {
 }
 #legendAxis .tick text {
   fill: #001533;
-  font-size: .7rem;
+  font-size: .9rem;
 }
 
 @media only screen and (max-width: 500px) {

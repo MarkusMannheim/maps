@@ -222,16 +222,16 @@
         });
 
         data = school_data;
-        // data = {
-        //   type: "FeatureCollection",
-        //   features: school_data
-        //     .features
-        //       .filter(function(d) {
-        //         return field == "college" ? d.properties.type == "college" || d.properties.type == "highCollege" :
-        //           field == "primary" ? d.properties.type == "primary" || d.properties.type == "combo" :
-        //           d.properties.type == "high" || d.properties.type == "combo" || d.properties.type == "highCollege";
-        //       })
-        // };
+        data = {
+          type: "FeatureCollection",
+          features: school_data
+            .features
+              .filter(function(d) {
+                return field == "college" ? d.properties.type == "college" || d.properties.type == "highCollege" :
+                  field == "primary" ? d.properties.type == "primary" || d.properties.type == "combo" :
+                  d.properties.type == "high" || d.properties.type == "combo" || d.properties.type == "highCollege";
+              })
+        };
 
         d3.selectAll(".school").remove();
 
