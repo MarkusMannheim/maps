@@ -56,7 +56,7 @@ body {
 }
 .suburb {
   stroke: white;  
-  stroke-width: 3;
+  stroke-width: 2;
   fill: none;
   pointer-events: none;
 }
@@ -65,7 +65,7 @@ body {
   flex-flow: column;  
 }
 #key div {
-  font-size: 1rem;
+  font-size: .9rem;
   font-weight: bold;
   text-align: center;
   margin: 1rem 0 .4rem 0;
@@ -86,7 +86,7 @@ body {
 }
 #legendAxis .tick text {
   fill: #001533;
-  font-size: .9rem;
+  font-size: .75rem;
 }
 
 @media only screen and (max-width: 500px) {

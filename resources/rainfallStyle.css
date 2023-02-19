@@ -41,7 +41,7 @@ body {
   background: #001533;
   color: white;
   font-family: ABCSansNovaBlack, "Arial Black", Helvetica, sans-serif;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   padding: 3px 6px;
 }
 #border {
@@ -70,7 +70,7 @@ body {
   flex-flow: column;  
 }
 #key div {
-  font-size: 1rem;
+  font-size: .9rem;
   font-weight: bold;
   text-align: center;
   margin: .75rem 0 .25rem 0;
@@ -91,7 +91,7 @@ body {
 }
 #legendAxis .tick text {
   fill: #001533;
-  font-size: .9rem;
+  font-size: .75rem;
 }
 #tip {
   position: absolute;

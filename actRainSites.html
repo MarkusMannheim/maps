@@ -177,7 +177,7 @@
         margin = width * 0.05;
 
         projection.fitExtent([[margin * 2, margin * 1], [width - margin, height - margin]], stationData);        
-        path.pointRadius(margin * .4);
+        path.pointRadius(margin * .35);
 
         delaunay = d3.Delaunay.from(stationData.features.map(function(d) { return projection(d.geometry.coordinates); }));
         voronoi = delaunay.voronoi([0, 0, width, height]);
