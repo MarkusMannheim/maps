@@ -86,7 +86,9 @@
 
         iframeHeight = document
           .querySelector("#map")
-          .getBoundingClientRect().height;
+          .getBoundingClientRect().width;
+
+        document.getElementById("map").style.height = iframeHeight + "px";
 
         window.parent.postMessage({
           sentinel: "amp",
