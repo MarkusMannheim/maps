@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-155991615-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag("js", new Date());
+      gtag("config", "UA-155991615-1");
+    </script>
+
+    <!-- metaphysics -->
+    <meta charset="utf-8">
+    <title>Cyclist road crashes</title>
+    <meta name="author" content="Markus Mannheim">
+    <meta name="keywords" content="act, canberra, crash, collision, accident, bicycle, cyclist, road">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- scripts -->
+    <script src="./resources/d3.v7.min.js"></script>
+    <script src="./resources/turf.min.js"></script>
+    <link href="./resources/bikeCrashesStyle.css" rel="stylesheet">
+    <link href="./resources/abcLogo64.png" rel="icon">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js"></script>
+  </head>
+
+  <body>
+    <div id="map"></div>
+
+    <script>
+      // elements
+
+      // load data
+      d3.csv("./data/crashes.csv")
+        .then(function(data) {
+
+          // format data
+          crashData = {
+            type: "FeatureCollection",
+            features: data
+              .map(function(d) {
+                return {
+                  type: "Feature",
+                  geometry: {
+                    type: "Point",
+                    coordinates: [+d.lng, +d.lat]
+                  },
+                  properties: { severity: d.severity }
+                };
+              })
+          };
+
+          crashBounds = turf
+            .bbox(crashData)
+            .map(function(d, i) {
+              if (Math.floor(i / 2) == 0) {
+                return d - 0.1;
+              } else {
+                return d + 0.1;
+              }
+            });
+
+          // await fonts
+          document.fonts.onloadingdone = fontsReady();
+        });
+
+      function fontsReady() {
+        // await user (scroll to map)
+        loadTarget = document.querySelector("#map");
+
+        // set up frame activation
+        observer = new IntersectionObserver(loadFrame, {threshold: .5});
+        observer.observe(loadTarget);
+      }
+
+      function loadFrame(interactionObjects) {
+        interactionObjects.map(function(object) {
+          if (object.isIntersecting) drawMap();
+        });
+      }
+
+      function drawMap() {
+        observer.unobserve(loadTarget);
+
+        iframeHeight = document
+          .querySelector("#map")
+          .getBoundingClientRect().height;
+
+        window.parent.postMessage({
+          sentinel: "amp",
+          type: "embed-size",
+          height: iframeHeight
+        }, "*");
+
+        mapboxgl.accessToken = "pk.eyJ1IjoibmV3cy1vbjFpbmUiLCJhIjoiR3FlZFZlVSJ9._30EFE9XYhQitqf4gzRG-g";
+
+        map = new mapboxgl.Map({
+          container: "map",
+          style: "mapbox://styles/mapbox/light-v10",
+          center: [149.126944, -35.293056],
+          zoom: 12,
+          maxZoom: 16,
+          minZoom: 9,
+          attributionControl: false,
+          maxBounds: crashBounds
+        });
+
+        attrib = new mapboxgl.AttributionControl({
+          customAttribution: "Transport Canberra",
+          compact: true
+        });
+        nav = new mapboxgl.NavigationControl();
+
+        map.addControl(attrib, "bottom-left")
+          .addControl(nav)
+          .on("load", function() {            
+
+            d3.select("#map").transition()
+              .duration(1000)
+              .style("opacity", 1);
+
+            map.getStyle()
+              .layers.map(function(d) {
+                return d.id;
+              })
+              .forEach(function(d) {
+                if (
+                  !d.includes("water") &&
+                  !d.includes("boundary") &&
+                  !d.includes("land-structure") &&
+                  !d.includes("road")
+                ) map.removeLayer(d);
+              });
+
+            map.addSource("crashJson", {
+              type: "geojson",
+              data: crashData
+            }).addLayer({
+              id: "crashes",
+              type: "circle",
+              source: "crashJson",
+              paint: {
+                "circle-radius": {
+                  stops: [
+                    [9, 1.5],
+                    [16, 10]
+                  ]
+                },
+                "circle-color": "#cc4e00",
+                "circle-opacity": 0.15
+              }
+            });           
+          });        
+      }
+    </script>
+  </body>
+</html>
