@@ -87,6 +87,7 @@
         iframeHeight = document
           .querySelector("#map")
           .getBoundingClientRect().width;
+        iframeHeight = Math.max(iframeHeight, 500);
 
         document.getElementById("map").style.height = iframeHeight + "px";
 
