@@ -137,7 +137,7 @@
           zooming = true;
           zoomed = true;
           resize();
-        }, 2000);
+        }, 1500);
       }
 
       function resize() {
@@ -177,16 +177,18 @@
           baseCircle = baseCircle * projection.scale() / startScale;
         } 
         scale.range([baseCircle, baseCircle * scale.domain()[1] / scale.domain()[0]]);
+
+        zoomLength = 4000;
         
         land.transition()
-          .duration(zooming ? 5000 : 0)
+          .duration(zooming ? zoomLength : 0)
           .attr("d", path)
           .on("end", () => {
             zooming = false;
             if (zoomed && !zooming) cells.style("pointer-events", "auto");
           });
         points.transition()
-          .duration(zooming ? 5000 : 0)
+          .duration(zooming ? zoomLength : 0)
             .attr("d", d => path.pointRadius(scale(Math.sqrt(d.properties.value / Math.PI)))(d));
 
         delaunay = d3.Delaunay
@@ -194,7 +196,7 @@
         voronoi = delaunay
           .voronoi([0, 0, width, height]);
         cells.transition()
-          .duration(zooming ? 5000 : 0)
+          .duration(zooming ? zoomLength : 0)
           .attr("d", (d, i) => voronoi.renderCell(i));        
       }
 
