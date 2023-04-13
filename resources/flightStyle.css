@@ -40,7 +40,7 @@ body {
   pointer-events: none;
 }
 .point.selected {
-  fill: #009de5;  
+  fill: #009de5;
 }
 .cell {
   fill: rgba(0, 0, 0, 0);
