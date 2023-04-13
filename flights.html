@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-155991615-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag("js", new Date());
+      gtag("config", "UA-155991615-1");
+    </script>
+
+    <!-- metaphysics -->
+    <meta charset="utf-8">
+    <title>Canberra's retirement exodus</title>
+    <meta name="author" content="Markus Mannheim">
+    <meta name="keywords" content="act, canberra, population, ages, data, retirement, migration, internal">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- scripts -->
+    <script src="./resources/d3.v7.min.js"></script>
+    <script src="./resources/topojson.v3.min.js"></script>
+    <link href="./resources/flightStyle.css" rel="stylesheet">
+    <link href="./resources/abcLogo64.png" rel="icon">
+  </head>
+
+  <body>
+    <div id="container">
+      <svg id="map">
+        <g id="mapGroup"></g>
+      </svg>
+      <div id="footer">
+        Top 50 suburbs in 2021 for residents aged 50–69 who lived in the ACT five years earlier.
+        Suburbs within 100km of Civic excluded.
+        Circle size indicates number of people.
+      </div>
+      <div id="tip"></div>
+    </div>
+
+    <script>
+      // elements
+      container = d3.select("#container");
+      map = d3.select("#map");
+      mapGroup = d3.select("#mapGroup");
+      footer = d3.select("#footer");
+      tip = d3.select("#tip");
+
+      // load data
+      Promise.all([
+        d3.json("./data/flightMap.topojson"),
+        d3.json("./data/flightDestinations.geojson")
+      ])
+        .then(function(data) {
+          // format data
+          mapData = topojson
+            .feature(data[0], data[0].objects.flightMap);
+          destinationData = data[1];
+
+          // await fonts
+          document.fonts.onloadingdone = fontsReady();
+        });
+
+      function fontsReady() {
+        // await user (scroll to map)
+        loadTarget = document.querySelector("#map");
+
+        // set up frame activation
+        observer = new IntersectionObserver(loadFrame, {threshold: 0.5});
+        observer.observe(loadTarget);
+      }
+
+      function loadFrame(interactionObjects) {
+        interactionObjects.map(function(object) {
+          if (object.isIntersecting) drawMap();
+        });
+      }
+
+      function drawMap() {
+        observer.unobserve(loadTarget);
+
+        container.transition()
+          .style("opacity", 1);
+          
+        land = mapGroup
+          .selectAll(".land")
+            .data(mapData.features)
+          .enter().append("path")
+            .attr("class", d => {
+              return d.properties["class"] == "map" ? "land" : "land ACT";
+            });
+
+        destinations = mapGroup
+          .selectAll(".destination")
+            .data(destinationData.features)
+          .enter().append("g")
+            .classed("destination", true);
+        
+        points = destinations
+          .append("path")
+            .classed("point", true);
+
+        cells = destinations
+          .append("path")
+            .classed("cell", true)
+            .on("mouseover", cellOn)
+            .on("mouseout", cellOff);
+
+        centroid = d3.geoCentroid(mapData);
+        projection = d3.geoOrthographic()
+          .rotate([-centroid[0], -centroid[1]]);
+
+        path = d3.geoPath()
+          .projection(projection);
+
+        scale = d3.scaleLinear()
+          .domain(d3.extent(destinationData.features.map(d => Math.sqrt(d.properties.value / Math.PI))));        
+                        
+        window.addEventListener("resize", resize);
+        zooming = false;
+        zoomed = false;
+        resize();        
+        zoom();
+      }
+
+      function zoom() {
+        d3.timeout(() => {
+          zooming = true;
+          zoomed = true;
+          resize();
+        }, 2000);
+      }
+
+      function resize() {
+        dimensions = document.getElementById("map").getBoundingClientRect();
+        width = dimensions.width;
+        height = width;
+
+        margin = {
+          top: 25,
+          right: 25,
+          bottom: 25,
+          left: 25
+        };
+
+        // set chart height
+        map.style("height", height + "px");
+        iframeHeight = document.getElementById("container").getBoundingClientRect().height;
+
+        // send dimensions to host window
+        window.parent.postMessage({
+          sentinel: "amp",
+          type: "embed-size",
+          height: iframeHeight
+        }, "*");
+
+        // redraw map
+        if (!zooming && !zoomed) {
+          centroid = d3.geoCentroid(mapData);
+          projection.rotate([-centroid[0], -centroid[1]])
+            .fitExtent([[margin.left, margin.top], [width - margin.left, height - margin.bottom]], mapData);
+          baseCircle = (width > 500 ? 3.5 : 2);          
+        } else {
+          centroid = d3.geoCentroid(destinationData);
+          startScale = projection.scale();
+          projection.rotate([-centroid[0], -centroid[1]])
+            .fitExtent([[margin.left, margin.top], [width - margin.left, height - margin.bottom]], destinationData);
+          baseCircle = baseCircle * projection.scale() / startScale;
+        } 
+        scale.range([baseCircle, baseCircle * scale.domain()[1] / scale.domain()[0]]);
+        
+        land.transition()
+          .duration(zooming ? 5000 : 0)
+          .attr("d", path)
+          .on("end", () => {
+            zooming = false;
+            if (zoomed && !zooming) cells.style("pointer-events", "auto");
+          });
+        points.transition()
+          .duration(zooming ? 5000 : 0)
+            .attr("d", d => path.pointRadius(scale(Math.sqrt(d.properties.value / Math.PI)))(d));
+
+        delaunay = d3.Delaunay
+          .from(destinationData.features.map(d => projection(d.geometry.coordinates)));
+        voronoi = delaunay
+          .voronoi([0, 0, width, height]);
+        cells.transition()
+          .duration(zooming ? 5000 : 0)
+          .attr("d", (d, i) => voronoi.renderCell(i));        
+      }
+
+      function cellOn(event, d) {
+        let point = projection(d.geometry.coordinates);
+        tip.style("opacity", 0)
+          .style("top", "0px")
+          .style("left", "0px")
+          .html("<p class='label'>" + d.properties.area + "</span></p>" + "<p>" + d.properties.value + " <span>people</span></p>");
+        let tipWidth = tip.node().getBoundingClientRect().width;
+        let tipHeight = tip.node().getBoundingClientRect().height;
+        tip.style("top", () => {
+          let top = point[1] - tipHeight / 2 < margin.top ? margin.top :
+            point[1] - tipHeight / 2 > height - margin.bottom ? height - margin.bottom :
+            point[1] - tipHeight / 2;
+          return top + "px";
+        }).style("left", () => {
+          let left = point[0] - tipWidth / 2 < margin.left ? margin.left :
+            point[0] - tipWidth / 2 > width - margin.right ? width - margin.right :
+            point[0] - tipWidth / 2;
+          return left + "px";
+        }).style("opacity", 1);
+        this.parentNode.querySelector(".point").classList.toggle("selected");
+      }
+
+      function cellOff() {
+        tip.style("opacity", 0);
+        this.parentNode.querySelector(".point").classList.toggle("selected");
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,80 @@
+@font-face {
+ font-family: ABCSansNovaRegular;
+ src: url(../fonts/ABCSansNova-Regular.otf);
+}
+@font-face {
+ font-family: ABCSansNovaBlack;
+ src: url(../fonts/ABCSansNova-Black.otf);
+}
+@font-face {
+ font-family: ABCSansNovaLight;
+ src: url(../fonts/ABCSansNova-Light.otf);
+}
+:root {
+  font-size: 1em;
+  font-family: ABCSansNovaBlack, "Arial Black", Helvetica, sans-serif;
+  box-sizing: border-box;
+  color: #001533;
+}
+body {
+  margin: 0;
+  overflow: hidden;
+}
+#container {
+  display: flex;
+  flex-flow: column;
+  justify-content: start;
+  width: 100%;
+  opacity: 0;
+}
+.land {
+  fill: #e6e6e6;
+  stroke: white;
+}
+.ACT {
+  fill: #009de5;
+}
+.point {
+  fill: #cc4e00;
+  opacity: .2;
+  pointer-events: none;
+}
+.point.selected {
+  fill: #009de5;  
+}
+.cell {
+  fill: rgba(0, 0, 0, 0);
+  pointer-events: none;
+}
+#footer {
+  font-family: ABCSansNovaLight, "Arial Narrow", Helvetica, sans-serif;
+  font-size: 13px;
+  font-style: italic;
+  padding-top: .75rem;
+  color: #888;
+}
+p {
+  margin: 0;
+}
+#tip {
+  opacity: 0;
+  position: absolute;
+  font-size: .9rem;
+  text-align: center;
+  pointer-events: none;
+}
+#tip .label {  
+  font-family: ABCSansNovaRegular, Helvetica, sans-serif;
+}
+#tip span {
+  font-family: ABCSansNovaLight, "Arial Narrow", Helvetica, sans-serif;
+}
+
+@media only screen and (max-width: 500px) {
+  #footer {
+    padding-top: .5rem;
+  }  
+  #tip {
+    font-size: .8rem;
+  }
+}
