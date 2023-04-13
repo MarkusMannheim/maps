@@ -54,7 +54,17 @@
           // format data
           mapData = topojson
             .feature(data[0], data[0].objects.flightMap);
-          destinationData = data[1];
+          destinationData = {
+            type: "FeatureCollection",
+            features: data[1]
+              .features
+              .map(d => {
+                if (d.properties.area.includes("(")) {
+                  d.properties.area = d.properties.area.slice(0, d.properties.area.indexOf("(") - 1);
+                }                
+                return d;
+              })
+          };
 
           // await fonts
           document.fonts.onloadingdone = fontsReady();
