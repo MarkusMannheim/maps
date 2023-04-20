@@ -30,9 +30,12 @@
         <g id="mapGroup"></g>
       </svg>
       <div id="footer">
-        Top 50 suburbs in 2021 for residents aged 50–69 who lived in the ACT five years earlier.
+        Top 50 suburbs/towns for people aged 50–69 who lived in the ACT in 2016 then moved.
         Suburbs within 100km of Civic excluded.
         Circle size indicates number of people.
+      </div>
+      <div id="controls">
+
       </div>
       <div id="tip"></div>
     </div>
@@ -43,12 +46,16 @@
       map = d3.select("#map");
       mapGroup = d3.select("#mapGroup");
       footer = d3.select("#footer");
+      controls = d3.select("#controls");
       tip = d3.select("#tip");
 
       // load data
       Promise.all([
         d3.json("./data/flightMap.topojson"),
-        d3.json("./data/flightDestinations.geojson")
+        d3.json("./data/flightDestinations.geojson"),
+        d3.svg("./resources/home.svg"),
+        d3.svg("./resources/plus.svg"),
+        d3.svg("./resources/minus.svg")
       ])
         .then(function(data) {
           // format data
@@ -65,6 +72,9 @@
                 return d;
               })
           };
+          iconHome = data[2];
+          iconPlus = data[3];
+          iconMinus = data[4];          
 
           // await fonts
           document.fonts.onloadingdone = fontsReady();
@@ -115,6 +125,22 @@
             .on("mouseover", cellOn)
             .on("mouseout", cellOff);
 
+        icons = [
+          [iconPlus, "plus"],
+          [iconHome, "home"],
+          [iconMinus, "minus"]
+        ];
+
+        icons.forEach(d => {
+          let icon = d3.select(controls.node()
+            .appendChild(d[0].querySelector("svg")));
+          icon.classed("icon", true)
+            .attr("id", d[1])
+            .on("mouseover", iconOn)
+            .on("mouseout", iconOff)
+            .on("click", control)
+        });
+
         centroid = d3.geoCentroid(mapData);
         projection = d3.geoOrthographic()
           .rotate([-centroid[0], -centroid[1]]);
@@ -122,21 +148,49 @@
         path = d3.geoPath()
           .projection(projection);
 
-        scale = d3.scaleLinear()
+        circleScale = d3.scaleLinear()
           .domain(d3.extent(destinationData.features.map(d => Math.sqrt(d.properties.value / Math.PI))));        
                         
         window.addEventListener("resize", resize);
+        initialZoom = true;
         zooming = false;
-        zoomed = false;
+        zoomLength = 4000;
+        regularZoomLength = 250;
         resize();        
         zoom();
       }
 
+      function iconOn() {
+        this.classList.add("hover");
+      }
+
+      function iconOff() {
+        this.classList.remove("hover");
+      }
+
+      function control() {
+        d3.timeout(() => this.classList.remove("hover"), 250);
+        console.log(minScale, projection.scale(), projection.translate());
+      }
+
       function zoom() {
         d3.timeout(() => {
+          initialZoom = false;
           zooming = true;
-          zoomed = true;
+          centroid = d3.geoCentroid(destinationData);
+          minScale = projection.scale();
+          projection.rotate([-centroid[0], -centroid[1]])
+            .fitExtent([[margin.left, margin.top], [width - margin.left, height - margin.bottom]], destinationData);
+          baseCircle = baseCircle * projection.scale() / minScale;
           resize();
+          d3.timeout(() => {
+            minScale = projection.scale();
+            zooming = false;
+            cells.style("pointer-events", "auto");
+            controls.style("pointer-events", "auto")
+              .transition()
+                .style("opacity", 1);
+          }, zoomLength);
         }, 1500);
       }
 
@@ -155,48 +209,43 @@
         // set chart height
         map.style("height", height + "px");
         iframeHeight = document.getElementById("container").getBoundingClientRect().height;
-
+        
         // send dimensions to host window
-        window.parent.postMessage({
-          sentinel: "amp",
-          type: "embed-size",
-          height: iframeHeight
-        }, "*");
+        if (initialZoom) {
+          console.log("iframeHeight:", iframeHeight);
+          window.parent.postMessage({
+            sentinel: "amp",
+            type: "embed-size",
+            height: iframeHeight
+          }, "*");
+        }
 
         // redraw map
-        if (!zooming && !zoomed) {
-          centroid = d3.geoCentroid(mapData);
+        if (initialZoom) {
+          let centroid = d3.geoCentroid(mapData);
           projection.rotate([-centroid[0], -centroid[1]])
             .fitExtent([[margin.left, margin.top], [width - margin.left, height - margin.bottom]], mapData);
-          baseCircle = (width > 500 ? 3.5 : 2);          
+          baseCircle = (width > 500 ? 3.5 : 2);
         } else {
-          centroid = d3.geoCentroid(destinationData);
-          startScale = projection.scale();
-          projection.rotate([-centroid[0], -centroid[1]])
-            .fitExtent([[margin.left, margin.top], [width - margin.left, height - margin.bottom]], destinationData);
-          baseCircle = baseCircle * projection.scale() / startScale;
-        } 
-        scale.range([baseCircle, baseCircle * scale.domain()[1] / scale.domain()[0]]);
 
-        zoomLength = 4000;
+        } 
+        circleScale.range([baseCircle, baseCircle * circleScale.domain()[1] / circleScale.domain()[0]]);
+
+        
         
         land.transition()
-          .duration(zooming ? zoomLength : 0)
-          .attr("d", path)
-          .on("end", () => {
-            zooming = false;
-            if (zoomed && !zooming) cells.style("pointer-events", "auto");
-          });
+          .duration(zooming ? zoomLength : regularZoomLength)
+          .attr("d", path);
         points.transition()
-          .duration(zooming ? zoomLength : 0)
-            .attr("d", d => path.pointRadius(scale(Math.sqrt(d.properties.value / Math.PI)))(d));
+          .duration(zooming ? zoomLength : regularZoomLength)
+            .attr("d", d => path.pointRadius(circleScale(Math.sqrt(d.properties.value / Math.PI)))(d));
 
         delaunay = d3.Delaunay
           .from(destinationData.features.map(d => projection(d.geometry.coordinates)));
         voronoi = delaunay
           .voronoi([0, 0, width, height]);
         cells.transition()
-          .duration(zooming ? zoomLength : 0)
+          .duration(zooming ? zoomLength : regularZoomLength)
           .attr("d", (d, i) => voronoi.renderCell(i));        
       }
 
