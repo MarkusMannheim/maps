@@ -30,16 +30,17 @@ body {
 .land {
   fill: #e6e6e6;
   stroke: white;
+  stroke-width: 1;
 }
 .ACT {
   fill: #009de5;
 }
-.point {
+.destination {
   fill: #cc4e00;
   opacity: .2;
   pointer-events: none;
 }
-.point.selected {
+.destination.selected {
   fill: #009de5;
 }
 .cell {
@@ -86,6 +87,7 @@ p {
   border: solid 1px #8495a9;
   fill: #8495a9;
   margin-bottom: .25rem;
+  cursor: pointer;
 }
 .icon.hover {
   fill: white;

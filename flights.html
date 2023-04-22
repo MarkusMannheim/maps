@@ -112,18 +112,8 @@
         destinations = mapGroup
           .selectAll(".destination")
             .data(destinationData.features)
-          .enter().append("g")
+          .enter().append("path")
             .classed("destination", true);
-        
-        points = destinations
-          .append("path")
-            .classed("point", true);
-
-        cells = destinations
-          .append("path")
-            .classed("cell", true)
-            .on("mouseover", cellOn)
-            .on("mouseout", cellOff);
 
         icons = [
           [iconPlus, "plus"],
@@ -144,20 +134,20 @@
         centroid = d3.geoCentroid(mapData);
         projection = d3.geoOrthographic()
           .rotate([-centroid[0], -centroid[1]]);
-
         path = d3.geoPath()
           .projection(projection);
-
         circleScale = d3.scaleLinear()
-          .domain(d3.extent(destinationData.features.map(d => Math.sqrt(d.properties.value / Math.PI))));        
-                        
+          .domain(d3.extent(destinationData.features.map(d => Math.sqrt(d.properties.value / Math.PI))));
         window.addEventListener("resize", resize);
         initialZoom = true;
         zooming = false;
         zoomLength = 4000;
         regularZoomLength = 250;
+        centroid = d3.geoCentroid(mapData);
+        projection.rotate([-centroid[0], -centroid[1]]);
+        transform = d3.zoomTransform(mapGroup.node());
         resize();        
-        zoom();
+        setUpZoom();
       }
 
       function iconOn() {
@@ -170,28 +160,116 @@
 
       function control() {
         d3.timeout(() => this.classList.remove("hover"), 250);
-        console.log(minScale, projection.scale(), projection.translate());
+        controlAction = this.id;
+        transform = d3.zoomTransform(mapGroup.node());
+        if (controlAction !== "home") {
+          let startScale = transform.k;
+          let newScale = controlAction == "plus" ?
+            Math.min(zoom.scaleExtent()[1], startScale * 1.2) :
+            Math.max(1, transform.k / 1.2);
+          transform.k = newScale;
+          let distance = [
+            width / 2 - transform.x,
+            height / 2 - transform.y
+          ];
+          let newDistance = [
+            distance[0] * newScale / startScale,
+            distance[1] * newScale / startScale
+          ];
+          transform.x = width / 2 - newDistance[0];
+          transform.y = height / 2 - newDistance[1];
+        } else {
+          transform.x = 0;
+          transform.y = 0;
+          transform.k = 1;
+        }
+        mapGroup.transition()
+          .attr("transform", transform);
+        land.transition()
+          .style("stroke-width", 1 / transform.k);
+        destinations.transition()
+          .attr("d", d => path.pointRadius(circleScale(Math.sqrt(d.properties.value / Math.PI) / transform.k))(d));
+        cellData = destinationData
+          .features
+          .map(d => {
+            let coords = projection(d.geometry.coordinates);
+            return [transform.x + coords[0] * transform.k, transform.y + coords[1] * transform.k, d.properties.area, d.properties.value];
+          })
+          .filter(d => d[0] >= 0 && d[0] <= width && d[1] >= 0 && d[1] <= height);
+        delaunay = d3.Delaunay
+          .from(cellData);
+        voronoi = delaunay
+          .voronoi([0, 0, width, height]);
+        cells = map
+          .selectAll(".cell")
+            .data(cellData);
+        cells.exit()
+          .remove();
+        cells.enter()
+          .append("path")
+            .classed("cell", true)
+            .on("mouseover", cellOn)
+            .on("mouseout", cellOff)
+            .attr("d", (d, i) => voronoi.renderCell(i))
+            .style("pointer-events", "auto");
+        cells.attr("d", (d, i) => voronoi.renderCell(i));
       }
 
-      function zoom() {
+      function setUpZoom() {
         d3.timeout(() => {
           initialZoom = false;
           zooming = true;
           centroid = d3.geoCentroid(destinationData);
-          minScale = projection.scale();
-          projection.rotate([-centroid[0], -centroid[1]])
-            .fitExtent([[margin.left, margin.top], [width - margin.left, height - margin.bottom]], destinationData);
-          baseCircle = baseCircle * projection.scale() / minScale;
+          projection.rotate([-centroid[0], -centroid[1]]);
           resize();
-          d3.timeout(() => {
-            minScale = projection.scale();
-            zooming = false;
-            cells.style("pointer-events", "auto");
-            controls.style("pointer-events", "auto")
-              .transition()
-                .style("opacity", 1);
-          }, zoomLength);
+          d3.timeout(activeControls, zoomLength);
         }, 1500);
+      }
+
+      function activeControls() {
+        zooming = false;
+        cells.style("pointer-events", "auto");
+        controls.style("pointer-events", "auto")
+          .transition()
+            .style("opacity", 1);
+
+        zoom = d3.zoom()
+          .scaleExtent([1, 15])
+          .translateExtent([[0, 0], [width, height]])
+          .on("zoom", zoomed);
+        map.call(zoom);
+       
+        function zoomed(event) {
+          cellOff();  
+          transform = event.transform;
+          mapGroup.attr("transform", transform);
+          land.style("stroke-width", 1 / transform.k);
+          destinations.attr("d", d => path.pointRadius(circleScale(Math.sqrt(d.properties.value / Math.PI) / transform.k))(d));
+          cellData = destinationData
+            .features
+            .map(d => {
+              let coords = projection(d.geometry.coordinates);
+              return [transform.x + coords[0] * transform.k, transform.y + coords[1] * transform.k, d.properties.area, d.properties.value];
+            })
+            .filter(d => d[0] >= 0 && d[0] <= width && d[1] >= 0 && d[1] <= height);
+          delaunay = d3.Delaunay
+            .from(cellData);
+          voronoi = delaunay
+            .voronoi([0, 0, width, height]);
+          cells = map
+            .selectAll(".cell")
+              .data(cellData);
+          cells.exit()
+            .remove();
+          cells.enter()
+            .append("path")
+              .classed("cell", true)
+              .on("mouseover", cellOn)
+              .on("mouseout", cellOff)
+              .attr("d", (d, i) => voronoi.renderCell(i))
+              .style("pointer-events", "auto");
+          cells.attr("d", (d, i) => voronoi.renderCell(i));
+        }
       }
 
       function resize() {
@@ -212,7 +290,6 @@
         
         // send dimensions to host window
         if (initialZoom) {
-          console.log("iframeHeight:", iframeHeight);
           window.parent.postMessage({
             sentinel: "amp",
             type: "embed-size",
@@ -221,40 +298,56 @@
         }
 
         // redraw map
+        baseCircle = (width > 500 ? 3.5 : 2);
         if (initialZoom) {
-          let centroid = d3.geoCentroid(mapData);
-          projection.rotate([-centroid[0], -centroid[1]])
-            .fitExtent([[margin.left, margin.top], [width - margin.left, height - margin.bottom]], mapData);
-          baseCircle = (width > 500 ? 3.5 : 2);
+          projection.fitExtent([[margin.left, margin.top], [width - margin.left, height - margin.bottom]], mapData);
+        } else if (zooming) {
+          minScale = projection.scale();
+          projection.fitExtent([[margin.left, margin.top], [width - margin.left, height - margin.bottom]], destinationData);
+          baseCircle = baseCircle * projection.scale() / minScale;
         } else {
-
-        } 
+          baseCircle = baseCircle * projection.scale() / minScale;
+        }
         circleScale.range([baseCircle, baseCircle * circleScale.domain()[1] / circleScale.domain()[0]]);
 
-        
-        
         land.transition()
           .duration(zooming ? zoomLength : regularZoomLength)
           .attr("d", path);
-        points.transition()
+        destinations.transition()
           .duration(zooming ? zoomLength : regularZoomLength)
             .attr("d", d => path.pointRadius(circleScale(Math.sqrt(d.properties.value / Math.PI)))(d));
 
+        cellData = destinationData
+          .features
+          .map(d => {
+            let coords = projection(d.geometry.coordinates);
+            return [transform.x + coords[0] * transform.k, transform.y + coords[1] * transform.k, d.properties.area, d.properties.value];
+          })
+          .filter(d => d[0] >= 0 && d[0] <= width && d[1] >= 0 && d[1] <= height);
         delaunay = d3.Delaunay
-          .from(destinationData.features.map(d => projection(d.geometry.coordinates)));
+          .from(cellData);
         voronoi = delaunay
           .voronoi([0, 0, width, height]);
-        cells.transition()
-          .duration(zooming ? zoomLength : regularZoomLength)
-          .attr("d", (d, i) => voronoi.renderCell(i));        
+        cells = map
+          .selectAll(".cell")
+            .data(cellData);
+        cells.exit()
+          .remove();
+        cells.enter()
+          .append("path")
+            .classed("cell", true)
+            .on("mouseover", cellOn)
+            .on("mouseout", cellOff)
+            .attr("d", (d, i) => voronoi.renderCell(i));
+        cells.attr("d", (d, i) => voronoi.renderCell(i));
       }
 
       function cellOn(event, d) {
-        let point = projection(d.geometry.coordinates);
+        let point = [d[0], d[1]];
         tip.style("opacity", 0)
           .style("top", "0px")
           .style("left", "0px")
-          .html("<p class='label'>" + d.properties.area + "</span></p>" + "<p>" + d.properties.value + " <span>people</span></p>");
+          .html("<p class='label'>" + d[2] + "</span></p>" + "<p>" + d[3] + " <span>people</span></p>");
         let tipWidth = tip.node().getBoundingClientRect().width;
         let tipHeight = tip.node().getBoundingClientRect().height;
         tip.style("top", () => {
@@ -268,12 +361,15 @@
             point[0] - tipWidth / 2;
           return left + "px";
         }).style("opacity", 1);
-        this.parentNode.querySelector(".point").classList.toggle("selected");
+        destinations.filter(e => e.properties.area == d[2])
+          .classed("selected", true);
+        
+        console.log(d);
       }
 
       function cellOff() {
         tip.style("opacity", 0);
-        this.parentNode.querySelector(".point").classList.toggle("selected");
+        destinations.classed("selected", false);
       }
     </script>
   </body>
