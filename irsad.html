@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-155991615-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag("js", new Date());
+      gtag("config", "UA-155991615-1");
+    </script>
+
+    <!-- metaphysics -->
+    <meta charset="utf-8">
+    <title>IRSAD areas</title>
+    <meta name="author" content="Markus Mannheim">
+    <meta name="keywords" content="australia, map, irsad, socioeconomic, advantage, disadvantages, sa1, sa1s">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- scripts -->
+    <script src="./resources/d3.v7.min.js"></script>
+    <link href="./resources/irsad.css" rel="stylesheet">
+    <link href="./resources/abcLogo64.png" rel="icon">
+  </head>
+
+  <body>
+    <div id="container">
+      <div id="map">
+        <img src="./resources/irsadMap.png">
+      </div>
+      <svg id="legend">
+        <defs>
+          <linearGradient id="gradient"></linearGradient>
+        </defs>
+        <text id="label">SEIFA</text>
+        <rect></rect>
+        <text id="dis" class="axis"></text>
+        <text id="adv" class="axis"></text>
+      </svg>
+    </div>
+
+    <script>
+      // elements
+      container = d3.select("#container");
+      map = d3.select("#map");
+      legend = d3.select("#legend");
+      gradient = d3.select("#gradient");
+      label = d3.select("#label");
+      dis = d3.select("#dis");
+      adv = d3.select("#adv");
+
+      // await fonts
+      document.fonts.onloadingdone = fontsReady();
+
+      function fontsReady() {
+        // await user (scroll to map)
+        loadTarget = document.querySelector("#map");
+
+        // set up frame activation
+        observer = new IntersectionObserver(loadFrame, {threshold: 0.5});
+        observer.observe(loadTarget);
+      }
+
+      function loadFrame(interactionObjects) {
+        interactionObjects.map(function(object) {
+          if (object.isIntersecting) drawMap();
+        });
+      }
+
+      function drawMap() {
+        observer.unobserve(loadTarget);
+
+        gradient.selectAll("stop")
+          .data(d3.range(0, 1.1, .1))
+          .enter().append("stop")
+            .attr("offset", d => d * 100 + "%")
+            .attr("stop-color", d => d3.interpolateRdYlBu(d));
+
+        axis = 
+
+        window.addEventListener("resize", resize);
+        resize();
+      }
+      
+      function resize() {
+        dimensions = map.node().getBoundingClientRect();
+        width = dimensions.width;
+        labelHeight = document.querySelector("#legend text").getBBox().height;
+
+        label.attr("x", width / 2)
+          .attr("y", labelHeight);
+        
+        dis.text("\u25C0 DISADVANTAGED");
+        adv.text("ADVANTAGED \u25B6");
+        axisHeight = document.querySelector(".axis").getBBox().height;
+        
+        barHeight = width < 500 ? 15 : 25;
+
+        dis.attr("y", width < 500 ? labelHeight + axisHeight + barHeight + 7 : labelHeight + axisHeight + barHeight + 7);
+        adv.attr("y", width < 500 ? labelHeight + axisHeight + barHeight + 7 : labelHeight + axisHeight + barHeight + 7)
+          .attr("x", width);
+
+        legend.select("rect")
+          .attr("width", width)
+          .attr("height", barHeight)
+          .attr("y", labelHeight + 5);
+
+        legend.style("height", dis.node().getBBox().y + dis.node().getBBox().height + "px");
+
+        iframeHeight = container.node().getBoundingClientRect().height;
+        
+        // send dimensions to host window
+        window.parent.postMessage({
+          sentinel: "amp",
+          type: "embed-size",
+          height: iframeHeight
+        }, "*");
+      }
+    </script>
+  </body>
+</html>

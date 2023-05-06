@@ -1,0 +1,52 @@
+@font-face {
+ font-family: ABCSansNovaRegular;
+ src: url(../fonts/ABCSansNova-Regular.otf);
+}
+@font-face {
+ font-family: ABCSansNovaBlack;
+ src: url(../fonts/ABCSansNova-Black.otf);
+}
+@font-face {
+ font-family: ABCSansNovaLight;
+ src: url(../fonts/ABCSansNova-Light.otf);
+}
+:root {
+  font-size: 1em;
+  font-family: ABCSansNovaBlack, "Arial Black", Helvetica, sans-serif;
+  box-sizing: border-box;
+  color: #001533;
+}
+body {
+  margin: 0;
+  overflow: hidden;
+}
+#container {
+  display: flex;
+  flex-flow: column;
+}
+#map img {
+  width: 100%;
+}
+#label {
+  text-anchor: middle;
+}
+.axis {
+  font-family: ABCSansNovaRegular, Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  font-size: .9rem;
+}
+#adv {
+  text-anchor: end;
+}
+#legend rect {
+  fill: url(#gradient);
+}
+
+@media only screen and (max-width: 500px) {
+  #label {
+    font-size: .9rem;
+  }
+  .axis {
+    font-size: .8rem;
+  }
+}
