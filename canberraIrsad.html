@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-155991615-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag("js", new Date());
+      gtag("config", "UA-155991615-1");
+    </script>
+
+    <!-- metaphysics -->
+    <meta charset="utf-8">
+    <title>Canberra's socioeconomic indexes</title>
+    <meta name="author" content="Markus Mannheim">
+    <meta name="keywords" content="act, canberra, seifa, irsad, socieconomic, advantage, disadvantage, map, sa1s">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- scripts -->
+    <script src="./resources/d3.v7.min.js"></script>
+    <script src="./resources/topojson.v3.min.js"></script>
+    <link href="./resources/canberraIrsadStyle.css" rel="stylesheet">
+    <link href="./resources/abcLogo64.png" rel="icon">
+  </head>
+
+  <body>
+    <div id="container">
+      <svg id="map">
+        <g id="mapGroup"></g>
+      </svg>
+      <svg id="legend">
+        <defs>
+          <linearGradient id="gradient"></linearGradient>
+        </defs>
+        <text id="label">SEIFA percentile</text>
+        <rect></rect>
+        <g id="axisGroup"></g>
+      </svg>
+      <div id="footer">
+        Sparsely populated areas (fewer than 20 people per square kilometre) are excluded.
+      </div>
+      <div id="controls"></div>
+      <div id="tip"></div>
+    </div>
+
+    <script>
+      // elements
+      container = d3.select("#container");
+      map = d3.select("#map");
+      mapGroup = d3.select("#mapGroup");
+      footer = d3.select("#footer");
+      controls = d3.select("#controls");
+      tip = d3.select("#tip");
+      legend = d3.select("#legend");
+      gradient = d3.select("#gradient");
+      label = d3.select("#label");
+      axisGroup = d3.select("#axisGroup");
+
+      // load data
+      Promise.all([
+        d3.json("./data/cbr_qbn.topojson"),
+        d3.json("./data/water.topojson"),
+        d3.json("./data/park.topojson"),
+        d3.json("./data/border.topojson"),
+        d3.svg("./resources/home.svg"),
+        d3.svg("./resources/plus.svg"),
+        d3.svg("./resources/minus.svg")
+      ])
+        .then(function(data) {
+          // format data
+          cbrQbnData = topojson
+            .feature(data[0], data[0].objects.data);
+          waterData = topojson
+            .feature(data[1], data[1].objects.data);
+          parkData = topojson
+            .feature(data[2], data[2].objects.data);
+          borderData = topojson
+            .feature(data[3], data[3].objects.data);
+          
+          iconHome = data[4];
+          iconPlus = data[5];
+          iconMinus = data[6];          
+
+          // await fonts
+          document.fonts.onloadingdone = fontsReady();
+        });
+
+      function fontsReady() {
+        // await user (scroll to map)
+        loadTarget = document.querySelector("#map");
+
+        // set up frame activation
+        observer = new IntersectionObserver(loadFrame, {threshold: 0.5});
+        observer.observe(loadTarget);
+      }
+
+      function loadFrame(interactionObjects) {
+        interactionObjects.map(function(object) {
+          if (object.isIntersecting) drawMap();
+        });
+      }
+
+      function drawMap() {
+        observer.unobserve(loadTarget);
+
+        gradient.selectAll("stop")
+          .data(d3.range(0, 1.1, .1))
+          .enter().append("stop")
+            .attr("offset", d => d * 100 + "%")
+            .attr("stop-color", d => d3.interpolateRdYlBu(d));
+
+        container.transition()
+          .style("opacity", 1);
+
+        scale = d3.scaleSequential(d3.interpolateRdYlBu)
+          .domain([1, 100]);
+          // .domain([143.489031, 1206.673616]);        
+          
+        park = mapGroup
+          .append("path")
+            .classed("park", true)
+            .datum(parkData);
+        areas = mapGroup
+          .selectAll(".area")
+            .data(cbrQbnData.features)
+          .enter().append("path")
+            .classed("area", true)
+            .style("fill", d => scale(d.properties.percentile));
+        water = mapGroup
+          .append("path")
+            .classed("water", true)
+            .datum(waterData);
+        border = mapGroup
+          .append("path")
+            .classed("border", true)
+            .datum(borderData);
+
+        x = d3.scaleLinear();
+        axis = d3.axisBottom(x)
+          .ticks(5, ".0%");
+
+        icons = [
+          [iconPlus, "plus"],
+          [iconHome, "home"],
+          [iconMinus, "minus"]
+        ];
+
+        icons.forEach(d => {
+          let icon = d3.select(controls.node()
+            .appendChild(d[0].querySelector("svg")));
+          icon.classed("icon", true)
+            .attr("id", d[1])
+            .on("mouseover", iconOn)
+            .on("mouseout", iconOff)
+            .on("click", control);
+        });
+
+        centroid = d3.geoCentroid(cbrQbnData);
+        projection = d3.geoOrthographic()
+          .rotate([-centroid[0], -centroid[1]]);
+        path = d3.geoPath()
+          .projection(projection);
+          
+        window.addEventListener("resize", resize);        
+        resize();
+        setUpZoom();
+      }
+
+      function iconOn() {
+        this.classList.add("hover");
+      }
+
+      function iconOff() {
+        this.classList.remove("hover");
+      }
+
+      function control() {
+        d3.timeout(() => this.classList.remove("hover"), 250);
+        controlAction = this.id;
+        transform = d3.zoomTransform(mapGroup.node());
+        if (controlAction !== "home") {
+          let startScale = transform.k;
+          let newScale = controlAction == "plus" ?
+            Math.min(zoom.scaleExtent()[1], startScale * 1.3) :
+            Math.max(1, transform.k / 1.3);
+          transform.k = newScale;
+          let distance = [
+            width / 2 - transform.x,
+            height / 2 - transform.y
+          ];
+          let newDistance = [
+            distance[0] * newScale / startScale,
+            distance[1] * newScale / startScale
+          ];
+          transform.x = width / 2 - newDistance[0];
+          transform.y = height / 2 - newDistance[1];
+        } else {
+          transform.x = 0;
+          transform.y = 0;
+          transform.k = 1;
+        }
+        mapGroup.transition()
+          .attr("transform", transform);
+        border.transition()
+          .style("stroke-width", 1 / transform.k);
+        // cellData = destinationData
+        //   .features
+        //   .map(d => {
+        //     let coords = projection(d.geometry.coordinates);
+        //     return [transform.x + coords[0] * transform.k, transform.y + coords[1] * transform.k, d.properties.area, d.properties.value];
+        //   })
+        //   .filter(d => d[0] >= 0 && d[0] <= width && d[1] >= 0 && d[1] <= height);
+      }
+
+      function setUpZoom() {
+        zoom = d3.zoom()
+          .scaleExtent([1, 15])
+          .translateExtent([[0, 0], [width, height]])
+          .on("zoom", zoomed);
+        map.call(zoom);
+       
+        function zoomed(event) {
+          // cellOff();  
+          transform = event.transform;
+          mapGroup.attr("transform", transform);
+          border.style("stroke-width", 1 / transform.k);
+        }
+      }
+
+      function resize() {
+        dimensions = document.getElementById("map").getBoundingClientRect();
+        width = dimensions.width;
+        mobile = width < 500;
+        height = width * 1.2;
+
+        margin = {
+          top: 25,
+          right: 25,
+          bottom: 25,
+          left: 25
+        };
+
+        // adjust legend
+        barHeight = mobile ? 15 : 25;
+        labelHeight = document.querySelector("#label").getBBox().height;
+        label.attr("y", labelHeight + 5)
+          .attr("x", (width - margin.left - margin.right) / 2 + margin.left);
+
+        x.range([margin.left, width - margin.right]);
+        axisGroup.attr("transform", "translate(0, " + (mobile ? 10 + labelHeight + barHeight : 15 + labelHeight + barHeight) + ")")
+          .call(axis);
+
+        legend.select("rect")
+          .attr("width", width - margin.left - margin.right)
+          .attr("height", barHeight)
+          .attr("x", margin.left)
+          .attr("y", mobile ? 10 + labelHeight : 15 + labelHeight);
+
+        legend.style("height", (mobile ? 10 + labelHeight + barHeight : 15 + labelHeight + barHeight) + d3.select(".tick text").node().getBBox().y + d3.select(".tick text").node().getBBox().height + "px");
+
+        // set chart height
+        map.style("height", height + "px");
+        iframeHeight = document.getElementById("container").getBoundingClientRect().height;
+        
+        // send dimensions to host window
+        window.parent.postMessage({
+          sentinel: "amp",
+          type: "embed-size",
+          height: iframeHeight
+        }, "*");
+
+        // redraw map
+        projection.fitExtent([[margin.left, margin.top], [width - margin.left, height - margin.bottom]], cbrQbnData);        
+        mapGroup.selectAll("path")
+          .attr("d", path);
+      }
+
+      function cellOn(event, d) {
+        let point = [d[0], d[1]];
+        tip.style("opacity", 0)
+          .style("top", "0px")
+          .style("left", "0px")
+          .html("<p class='label'>" + d[2] + "</span></p>" + "<p>" + d[3] + " <span>people</span></p>");
+        let tipWidth = tip.node().getBoundingClientRect().width;
+        let tipHeight = tip.node().getBoundingClientRect().height;
+        tip.style("top", () => {
+          let top = point[1] - tipHeight / 2 < margin.top ? margin.top :
+            point[1] - tipHeight / 2 > height - margin.bottom ? height - margin.bottom :
+            point[1] - tipHeight / 2;
+          return top + "px";
+        }).style("left", () => {
+          let left = point[0] - tipWidth / 2 < margin.left ? margin.left :
+            point[0] - tipWidth / 2 > width - margin.right ? width - margin.right :
+            point[0] - tipWidth / 2;
+          return left + "px";
+        }).style("opacity", 1);
+        // destinations.filter(e => e.properties.area == d[2])
+        //   .classed("selected", true);
+      }
+
+      function cellOff() {
+        tip.style("opacity", 0);
+        // destinations.classed("selected", false);
+      }
+    </script>
+  </body>
+</html>

@@ -76,8 +76,6 @@
             .attr("offset", d => d * 100 + "%")
             .attr("stop-color", d => d3.interpolateRdYlBu(d));
 
-        axis = 
-
         window.addEventListener("resize", resize);
         resize();
       }
@@ -96,13 +94,15 @@
         
         barHeight = width < 500 ? 15 : 25;
 
-        dis.attr("y", width < 500 ? labelHeight + axisHeight + barHeight + 7 : labelHeight + axisHeight + barHeight + 7);
+        dis.attr("y", width < 500 ? labelHeight + axisHeight + barHeight + 7 : labelHeight + axisHeight + barHeight + 7)
+          .attr("x", 25);
         adv.attr("y", width < 500 ? labelHeight + axisHeight + barHeight + 7 : labelHeight + axisHeight + barHeight + 7)
-          .attr("x", width);
+          .attr("x", width - 25);
 
         legend.select("rect")
-          .attr("width", width)
+          .attr("width", width - 50)
           .attr("height", barHeight)
+          .attr("x", 25)
           .attr("y", labelHeight + 5);
 
         legend.style("height", dis.node().getBBox().y + dis.node().getBBox().height + "px");

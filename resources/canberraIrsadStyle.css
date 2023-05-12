@@ -1,0 +1,121 @@
+@font-face {
+ font-family: ABCSansNovaRegular;
+ src: url(../fonts/ABCSansNova-Regular.otf);
+}
+@font-face {
+ font-family: ABCSansNovaBlack;
+ src: url(../fonts/ABCSansNova-Black.otf);
+}
+@font-face {
+ font-family: ABCSansNovaLight;
+ src: url(../fonts/ABCSansNova-Light.otf);
+}
+:root {
+  font-size: 1em;
+  font-family: ABCSansNovaBlack, "Arial Black", Helvetica, sans-serif;
+  box-sizing: border-box;
+  color: #001533;
+}
+body {
+  margin: 0;
+  /* overflow: hidden; */
+}
+#container {
+  display: flex;
+  flex-flow: column;
+  justify-content: start;
+  width: 100%;
+  opacity: 0;
+}
+.border {
+  fill: none;
+  stroke: #68788e;
+  stroke-dasharray: 2 2;
+  pointer-events: none;  
+}
+.park {
+  fill: #8495a9;
+  opacity: .2;
+}
+.water {
+  fill: #00153;
+}
+#footer {
+  font-family: ABCSansNovaLight, "Arial Narrow", Helvetica, sans-serif;
+  font-size: 13px;
+  font-style: italic;
+  padding-top: 1rem;
+  color: #888;
+}
+p {
+  margin: 0;
+}
+#tip {
+  opacity: 0;
+  position: absolute;
+  font-size: .9rem;
+  text-align: center;
+  pointer-events: none;
+}
+#tip .label {  
+  font-family: ABCSansNovaRegular, Helvetica, sans-serif;
+}
+#tip span {
+  font-family: ABCSansNovaLight, "Arial Narrow", Helvetica, sans-serif;
+}
+#controls {
+  position: fixed;
+  display: flex;
+  flex-flow: column;
+  top: .5rem;
+  left: .5rem;
+}
+.icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  background: white;
+  border-radius: .25rem;
+  border: solid 1px #8495a9;
+  fill: #8495a9;
+  margin-bottom: .25rem;
+  cursor: pointer;
+}
+.icon.hover {
+  fill: white;
+  background: #8495a9;
+}
+#axisGroup text {
+  font-family: ABCSansNovaRegular, Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  font-size: .9rem;
+}
+.tick line {
+  stroke: #001533;
+}
+#axisGroup .domain {
+  stroke: none;
+}
+#label {
+  text-anchor: middle;
+}
+#adv {
+  text-anchor: end;
+}
+#legend rect {
+  fill: url(#gradient);
+}
+
+@media only screen and (max-width: 500px) {
+  #footer {
+    padding-top: .75rem;
+  }  
+  #tip {
+    font-size: .8rem;
+  }
+  .axis {
+    font-size: .8rem;
+  }
+  #label {
+    font-size: .9rem;
+  }
+}
