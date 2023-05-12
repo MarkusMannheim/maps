@@ -86,7 +86,6 @@ p {
 }
 #axisGroup text {
   font-family: ABCSansNovaRegular, Arial, Helvetica, sans-serif;
-  font-weight: bold;
   font-size: .9rem;
 }
 .tick line {
@@ -96,6 +95,7 @@ p {
   stroke: none;
 }
 #label {
+  font-weight: bold;
   text-anchor: middle;
 }
 #adv {
