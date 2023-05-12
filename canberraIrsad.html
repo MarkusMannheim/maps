@@ -232,7 +232,7 @@
         dimensions = document.getElementById("map").getBoundingClientRect();
         width = dimensions.width;
         mobile = width < 500;
-        height = width * 1.2;
+        height = mobile ? width * 1.25 : width;
 
         margin = {
           top: 25,
