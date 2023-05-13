@@ -136,7 +136,8 @@
             .classed("area", true)
             .style("fill", d => scale(d.properties.percentile))
             .on("mouseover", cellOn)
-            .on("mouseout", cellOff);
+            .on("mouseout", cellOff)
+            .on("click", cellOn);
         water = mapGroup
           .append("path")
             .classed("water", true)
@@ -161,7 +162,7 @@
             .appendChild(d[0].querySelector("svg")));
           icon.classed("icon", true)
             .attr("id", d[1])
-            .on("mouseover", iconOn)
+            .on("mouseover", iconOn)            
             .on("mouseout", iconOff)
             .on("click", control);
         });
@@ -186,6 +187,7 @@
       }
 
       function control() {
+        cellOff();
         d3.timeout(() => this.classList.remove("hover"), 250);
         controlAction = this.id;
         transform = d3.zoomTransform(mapGroup.node());
@@ -297,29 +299,30 @@
             "<p>no. residents: " + d3.format(",.0f")(d.properties.population) + "</p>" +
             "<p>score: " + d3.format(",.1f")(d.properties.irsad) + "</p>" +
             "<p>percentile: " + d3.format(".0%")(d.properties.percentile / 100) + "</p>");
+
         let tipWidth = tip.node().getBoundingClientRect().width;
         let tipHeight = tip.node().getBoundingClientRect().height;
+
         tip.style("top", () => {
-          let top = point[1] - tipHeight / 2 < margin.top ? margin.top :
-            point[1] - tipHeight / 2 > height - margin.bottom ? height - margin.bottom :
-            point[1] - tipHeight / 2;
+          let top = (point[1] - tipHeight / 2 < margin.top ? margin.top + 3 :
+            point[1] + tipHeight / 2 > height - margin.bottom ? height - tipHeight - margin.bottom - 3 :
+            point[1] - tipHeight / 2 - 3);
           return top + "px";
         }).style("left", () => {
-          let left = point[0] - tipWidth / 2 < margin.left ? margin.left :
-            point[0] - tipWidth / 2 > width - margin.right ? width - margin.right :
-            point[0] - tipWidth / 2;
+          let left = (point[0] - tipWidth / 2 < margin.left ? margin.left + 3:
+            point[0] + tipWidth / 2 > width - margin.right ? width - tipWidth - margin.right - 3 :
+            point[0] - tipWidth / 2 - 3);
           return left + "px";
         }).style("opacity", 1);
+        
         areas.filter(e => e.properties.id == d.properties.id)
-          .classed("selected", true)
           .style("stroke", "gold")
           .style("stroke-width", 3 / transform.k);
       }
 
-      function cellOff() {
+      function cellOff() {        
         tip.style("opacity", 0);
-        areas.classed("selected", false)
-          .style("stroke", "none")
+        areas.style("stroke", "none")
           .style("stroke-width", 0);
       }
     </script>
