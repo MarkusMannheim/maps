@@ -30,7 +30,8 @@ body {
 .border {
   fill: none;
   stroke: #68788e;
-  stroke-dasharray: 2 2;
+  stroke-width: 2;
+  stroke-dasharray: 2 3;
   pointer-events: none;  
 }
 .park {
@@ -103,6 +104,19 @@ p {
 }
 #legend rect {
   fill: url(#gradient);
+}
+#tip {
+  padding: 3px 5px;
+  background: #001533;
+  border-radius: 5px;
+  text-align: center;
+  color: white;
+  font-size: .8rem;
+  font-family: ABCSansNovaLight, "Arial Narrow", Helvetica, sans-serif;
+}
+#tip .title {
+  font-family: ABCSansNovaRegular, Helvetica, sans-serif;
+  font-weight: bold;
 }
 
 @media only screen and (max-width: 500px) {

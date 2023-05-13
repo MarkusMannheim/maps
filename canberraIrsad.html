@@ -71,6 +71,15 @@
           // format data
           cbrQbnData = topojson
             .feature(data[0], data[0].objects.data);
+          cbrQbnData.features = cbrQbnData
+            .features
+            .map((d, i) => {
+              d.properties["id"] = i;
+              d.properties["centroid"] = d3.geoCentroid(d);
+              let suburb = d.properties.suburb;
+              if (suburb.includes("(")) d.properties.suburb = suburb.slice(0, suburb.indexOf("(") - 1);
+              return d;
+            });
           waterData = topojson
             .feature(data[1], data[1].objects.data);
           parkData = topojson
@@ -115,7 +124,6 @@
 
         scale = d3.scaleSequential(d3.interpolateRdYlBu)
           .domain([1, 100]);
-          // .domain([143.489031, 1206.673616]);        
           
         park = mapGroup
           .append("path")
@@ -126,7 +134,9 @@
             .data(cbrQbnData.features)
           .enter().append("path")
             .classed("area", true)
-            .style("fill", d => scale(d.properties.percentile));
+            .style("fill", d => scale(d.properties.percentile))
+            .on("mouseover", cellOn)
+            .on("mouseout", cellOff);
         water = mapGroup
           .append("path")
             .classed("water", true)
@@ -203,14 +213,8 @@
         mapGroup.transition()
           .attr("transform", transform);
         border.transition()
-          .style("stroke-width", 1 / transform.k);
-        // cellData = destinationData
-        //   .features
-        //   .map(d => {
-        //     let coords = projection(d.geometry.coordinates);
-        //     return [transform.x + coords[0] * transform.k, transform.y + coords[1] * transform.k, d.properties.area, d.properties.value];
-        //   })
-        //   .filter(d => d[0] >= 0 && d[0] <= width && d[1] >= 0 && d[1] <= height);
+          .style("stroke-width", 2 / transform.k)
+          .style("stroke-dasharray", 2 / transform.k + " " + 3 / transform.k);
       }
 
       function setUpZoom() {
@@ -221,10 +225,11 @@
         map.call(zoom);
        
         function zoomed(event) {
-          // cellOff();  
+          cellOff();
           transform = event.transform;
           mapGroup.attr("transform", transform);
-          border.style("stroke-width", 1 / transform.k);
+          border.style("stroke-width", 2 / transform.k)
+            .style("stroke-dasharray", 2 / transform.k + " " + 3 / transform.k);
         }
       }
 
@@ -233,6 +238,7 @@
         width = dimensions.width;
         mobile = width < 500;
         height = mobile ? width * 1.25 : width;
+        transform = d3.zoomTransform(mapGroup.node());
 
         margin = {
           top: 25,
@@ -277,11 +283,20 @@
       }
 
       function cellOn(event, d) {
-        let point = [d[0], d[1]];
+        d3.select(this)
+          .raise();
+        let point = projection(d.properties.centroid);
+        point = [
+          transform.x + point[0] * transform.k,
+          transform.y + point[1] * transform.k
+        ];
         tip.style("opacity", 0)
           .style("top", "0px")
           .style("left", "0px")
-          .html("<p class='label'>" + d[2] + "</span></p>" + "<p>" + d[3] + " <span>people</span></p>");
+          .html("<p class='title'>area in " + d.properties.suburb + "</p>" +
+            "<p>no. residents: " + d3.format(",.0f")(d.properties.population) + "</p>" +
+            "<p>score: " + d3.format(",.1f")(d.properties.irsad) + "</p>" +
+            "<p>percentile: " + d3.format(".0%")(d.properties.percentile / 100) + "</p>");
         let tipWidth = tip.node().getBoundingClientRect().width;
         let tipHeight = tip.node().getBoundingClientRect().height;
         tip.style("top", () => {
@@ -295,13 +310,17 @@
             point[0] - tipWidth / 2;
           return left + "px";
         }).style("opacity", 1);
-        // destinations.filter(e => e.properties.area == d[2])
-        //   .classed("selected", true);
+        areas.filter(e => e.properties.id == d.properties.id)
+          .classed("selected", true)
+          .style("stroke", "gold")
+          .style("stroke-width", 3 / transform.k);
       }
 
       function cellOff() {
         tip.style("opacity", 0);
-        // destinations.classed("selected", false);
+        areas.classed("selected", false)
+          .style("stroke", "none")
+          .style("stroke-width", 0);
       }
     </script>
   </body>
