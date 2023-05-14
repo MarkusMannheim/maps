@@ -50,7 +50,7 @@
       adv = d3.select("#adv");
 
       // await fonts
-      document.fonts.onloadingdone = fontsReady();
+      document.fonts.onloadingdone = drawMap();
 
       function fontsReady() {
         // await user (scroll to map)
@@ -68,7 +68,7 @@
       }
 
       function drawMap() {
-        observer.unobserve(loadTarget);
+        // observer.unobserve(loadTarget);
 
         gradient.selectAll("stop")
           .data(d3.range(0, 1.1, .1))
