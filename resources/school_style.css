@@ -109,8 +109,37 @@ option {
   fill: #001533;
   alignment-baseline:central;
 }
+
 @media only screen and (max-width: 600px) {
   .option {
     font-size: .8rem;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body.darkMode {
+    color: white;
+    background: black;
+  }
+  .darkMode #water {
+    fill: #1c64b8;
+  }
+  .darkMode .school .point {
+    stroke: white;
+  }
+  .darkMode #footer {
+    color: #ccc;
+  }
+  .darkMode #tip {
+    background: #037cc2;
+  }
+  .darkMode #tip span {
+   color: gold;
+  }
+  .darkMode .legendItem circle {
+    stroke: white;
+  }
+  .darkMode .legendItem text {
+    fill: white;
   }
 }

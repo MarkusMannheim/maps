@@ -53,6 +53,9 @@
         ["colleges", "college"]
       ];
 
+      // dark mode
+      darkModeCheck();
+
       // load data
       Promise.all([
         d3.json("./data/act.topojson"),
@@ -98,30 +101,10 @@
           };
 
           // await fonts
-          document.fonts.onloadingdone = fontsReady();
+          document.fonts.onloadingdone = drawMap();
         });
-
-      function fontsReady() {
-        // await user (scroll to map)
-        loadTarget = document.querySelector("#map");
-
-        // set up frame activation
-        observer = new IntersectionObserver(loadFrame, {
-          threshold: .5
-        });
-        ready = false;
-        observer.observe(loadTarget);
-      }
-
-      function loadFrame(interactionObjects) {
-        interactionObjects.map(function(object) {
-          if (!ready && object.isIntersecting) drawMap();
-        });
-      }
 
       function drawMap() {
-        ready = true;
-
         projection = d3.geoConicEqualArea()
           .parallels([-18, -36])
           .rotate([-149.126944, 0]);
@@ -315,6 +298,18 @@
             break;
           }
         };
+      }
+
+      function darkModeCheck() {
+        let testString = window && window.location !== window.parent.location ?
+          document.referrer :
+          document.location.href;
+        
+        let darkMode = testString
+          .includes("newsapp");
+
+        d3.select("body")
+          .classed("darkMode", darkMode);
       }
     </script>
   </body>
