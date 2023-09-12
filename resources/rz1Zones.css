@@ -25,7 +25,7 @@ body {
   flex-flow: column;
 }
 #map {
-  height: 428px;
+  height: 1003px;
   opacity: 0;
 }
 #header {

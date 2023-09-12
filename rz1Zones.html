@@ -108,7 +108,12 @@
           center: [149.126944, -35.293056],
           zoom: 14,
           maxZoom: 16,
-          attributionControl: false
+          pitchWithRotate: false,
+          dragRotate: false,
+          touchZoomRotate: false,
+          attributionControl: false,
+          scrollZoom: false,
+          dragPan: false
         });
 
         map.on("load", function() {
@@ -116,8 +121,7 @@
           map.addControl(new mapboxgl.AttributionControl({
               compact: true,
               customAttribution: "ACT Environment, Planning and Sustainable Development Directorate"
-            }), "bottom-left")
-            .addControl(new mapboxgl.NavigationControl(), "top-left");
+            }), "bottom-left");
 
           map.getStyle()
             .layers.map(function(d) {
@@ -164,8 +168,11 @@
                 );
                 d3.timeout(function() {
                   map.setMaxBounds(
-                    map.getBounds()
-                  );
+                      map.getBounds()
+                    )
+                    .addControl(new mapboxgl.NavigationControl(), "top-left");
+                  map.scrollZoom.enable();
+                  map.dragPan.enable();
                 }, 4000)
               });
         });
