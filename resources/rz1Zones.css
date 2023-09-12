@@ -103,12 +103,16 @@ body {
   body.darkMode {
     color: white;
     background: black;
-  }  
+  }
   body.darkMode #legend {
     background: black;
     border: solid 2px white;
   }
   body.darkMode #legend .key:last-child .box {
     opacity: 1;
+  }
+  body.darkMode .mapboxgl-ctrl-attrib-inner {
+    color: white;
+    background: black;
   }
 }
