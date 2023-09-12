@@ -59,10 +59,10 @@
             type: "FeatureCollection",
             features: geoData.features.map(d => {
               if (d.properties.affected == "true") {
-                d.properties["colour"] = "#009de5";
+                d.properties["colour"] = "#cc4e00";
                 d.properties["opacity"] = 1;
               } else {
-                d.properties["colour"] = "#cc4e00";
+                d.properties["colour"] = "#009de5";
                 d.properties["opacity"] = (darkMode ? 1 : .5);
                 d.properties["opacity"] = 1;
               }
