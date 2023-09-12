@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-155991615-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag("js", new Date());
+      gtag("config", "UA-155991615-1");
+    </script>
+
+    <!-- metaphysics -->
+    <meta charset="utf-8">
+    <title>ACT residential zones</title>
+    <meta name="author" content="Markus Mannheim">
+    <meta name="keywords" content="map, data, act, canberra, housing, houses, zoning, rz1, subdivision, dual-occupancy">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- scripts -->
+    <script src="./resources/d3.v7.min.js"></script>
+    <script src="./resources/topojson.v3.min.js"></script>
+    <link href="./resources/rz1Zones.css" rel="stylesheet">
+    <link href="./resources/abcLogo64.png" rel="icon">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.js"></script>
+  </head>
+
+  <body>
+    <div id="container">
+      <div id="header">Canberra's RZ1 blocks</div>
+      <div id="map"></div>
+      <div id="legend">
+        <div class="key">
+          <div class="box"></div>
+          <div class="label">800m² or more</div>
+        </div>
+        <div class="key">
+          <div class="box"></div>
+          <div class="label">less than 800m²</div>
+        </div>
+      </div>
+      <div id="footer"><strong>Note:</strong> A small number of RZ1 blocks shown above have already been subdivided, though their zoning policy does not reflect this.</div>
+    </div>
+
+    <script>
+      container = d3.select("#container");
+      header = d3.select("#header");
+      legend = d3.select("#legend");
+      footer = d3.select("#footer");
+
+      darkMode = darkModeCheck();
+
+      d3.json("./data/zoning_blocks.topojson")
+        .then((data) => {
+          geoData = topojson
+            .feature(data, data.objects.data);
+          geoData = {
+            type: "FeatureCollection",
+            features: geoData.features.map(d => {
+              if (d.properties.affected == "true") {
+                d.properties["colour"] = "#cc4e00";
+                d.properties["opacity"] = 1;
+              } else {
+                d.properties["colour"] = "#009de5";
+                d.properties["opacity"] = (darkMode ? 1 : .5);
+                d.properties["opacity"] = 1;
+              }
+              return d;
+            })
+          };
+
+          // await fonts
+          document.fonts.onloadingdone = fontsReady();
+        });
+
+      function resize() {
+        // fix dimensions
+        width = document.getElementById("container").getBoundingClientRect().width;
+        d3.select("#map").style("height", width / .7 + "px");
+        height = document.getElementById("container").getBoundingClientRect().height;
+        mobile = width <= 500;
+
+        // legend adjustment
+        if (mobile) {
+          legend.style("bottom", document.getElementById("footer").getBoundingClientRect().height + 18 + "px");
+
+        } else {
+          legend.style("top", document.getElementById("map").getBoundingClientRect().y + 16 + "px");
+        }
+
+        // send dimensions to host window
+        window.parent.postMessage({
+          sentinel: "amp",
+          type: "embed-size",
+          height: height
+        }, "*");
+      }
+
+      function fontsReady() {
+        mapboxgl.accessToken = "pk.eyJ1IjoibmV3cy1vbjFpbmUiLCJhIjoiR3FlZFZlVSJ9._30EFE9XYhQitqf4gzRG-g";
+
+        window.addEventListener("resize", resize);
+        resize();
+
+        map = new mapboxgl.Map({
+          container: "map",
+          // style: (darkMode ? "mapbox://styles/mapbox/dark-v10" : "mapbox://styles/mapbox/light-v10"),
+          style: "mapbox://styles/mapbox/dark-v10",
+          center: [149.126944, -35.293056],
+          zoom: 14,
+          maxZoom: 16,
+          attributionControl: false
+        });
+
+        map.on("load", function() {
+
+          map.addControl(new mapboxgl.AttributionControl({
+              compact: true,
+              customAttribution: "ACT Environment, Planning and Sustainable Development Directorate"
+            }), "bottom-left")
+            .addControl(new mapboxgl.NavigationControl(), "top-left");
+
+          map.getStyle()
+            .layers.map(function(d) {
+              return d.id;
+            })
+            .forEach(function(d) {
+              if (
+                !d.includes("water") &&
+                !d.includes("boundary") &&
+                !d.includes("land-structure") &&
+                !d.includes("road")
+              ) map.removeLayer(d);
+            });
+
+          map.addSource("zones", {
+            type: "geojson",
+            data: geoData
+          });
+
+          map.addLayer({
+            id: "zones",
+            type: "fill",
+            source: "zones",
+            paint: {
+              "fill-color": ["get", "colour"],
+              "fill-opacity": ["get", "opacity"]
+            }
+          }, "admin-1-boundary-bg");
+
+          legend.transition()
+            .duration(1000)
+            .style("opacity", 1);
+
+          d3.select("#map")
+            .transition()
+              .duration(1000)
+              .style("opacity", 1)
+              .on("end", function(d) {
+                map.fitBounds(
+                  d3.geoBounds(geoData), {
+                    padding: 16,
+                    duration: 4000
+                  }
+                );
+                d3.timeout(function() {
+                  map.setMaxBounds(
+                    map.getBounds()
+                  );
+                }, 4000)
+              });
+        });
+      }
+
+      function darkModeCheck() {
+        let testString = window && window.location !== window.parent.location ?
+          document.referrer :
+          document.location.href;
+        
+        let darkMode = testString
+          .includes("newsapp");
+
+        d3.select("body")
+          .classed("darkMode", darkMode);
+
+        return darkMode;
+      }
+
+    </script>
+  </body>
+</html>

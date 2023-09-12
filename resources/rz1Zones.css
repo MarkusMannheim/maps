@@ -1,0 +1,117 @@
+@font-face {
+ font-family: ABCSansNovaRegular;
+ src: url(../fonts/ABCSansNova-Regular.otf);
+}
+@font-face {
+ font-family: ABCSansNovaBlack;
+ src: url(../fonts/ABCSansNova-Black.otf);
+}
+@font-face {
+ font-family: ABCSansNovaLight;
+ src: url(../fonts/ABCSansNova-Light.otf);
+}
+:root {
+  font-size: 1em;
+  font-family: ABCSansNovaRegular, Helvetica, sans-serif;
+  color: #001533;
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  overflow: hidden;
+}
+#container {
+  display: flex;
+  flex-flow: column;
+}
+#map {
+  height: 428px;
+  opacity: 0;
+}
+#header {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: .75rem;
+}
+#legend {
+  position: absolute;
+  right: 1rem;
+  font-size: .9rem;
+  background: white;
+  padding: .25rem .5rem;
+  border: solid 2px #001533;
+  opacity: 0;
+  pointer-events: none;
+}
+#legend .key {
+  display: flex;
+}
+#legend .key:first-child {
+  margin-bottom: .25rem;
+}
+#legend .box {
+  width: 1.1rem;
+  height: 1.1rem;
+  background: #009de5;
+  opacity: .5;
+  margin-right: .25rem;
+  border-radius: 50%;
+}
+#legend .key .label {
+  line-height: 1.1rem;
+}
+#legend .key:last-child .box {
+  background: #cc4e00;
+  opacity: 1;
+}
+#footer {
+  font-family: ABCSansNovaLight, "Arial Narrow", Helvetica, sans-serif;
+  margin-top: 10px;
+  font-size: 12px;
+  color: #888;
+}
+
+@media only screen and (max-width: 500px) {
+  #header {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: .5rem;
+  }
+  #footer {
+    font-size: 11px;
+  }
+  #legend {
+    right: .5rem;
+    font-size: .8rem;
+    padding: .25rem .25rem;
+  }
+  #legend .key {
+    display: flex;
+  }
+  #legend .key:first-child {
+    margin-bottom: .25rem;
+  }
+  #legend .box {
+    width: 1rem;
+    height: 1rem;
+  }
+  #legend .key .label {
+    line-height: 1rem;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: white;
+  }  
+  body {
+    background: black;
+  }
+  #legend {
+    background: black;
+    border: solid 2px white;
+  }
+  #legend .box {
+    opacity: 1;
+  }
+}

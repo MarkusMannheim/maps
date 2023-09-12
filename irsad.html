@@ -105,16 +105,7 @@
           .attr("x", 25)
           .attr("y", labelHeight + 5);
 
-        legend.style("height", dis.node().getBBox().y + dis.node().getBBox().height + "px");
-
-        iframeHeight = container.node().getBoundingClientRect().height;
-        
-        // send dimensions to host window
-        window.parent.postMessage({
-          sentinel: "amp",
-          type: "embed-size",
-          height: iframeHeight
-        }, "*");
+        legend.style("height", dis.node().getBBox().y + dis.node().getBBox().height + "px");        
       }
     </script>
   </body>
