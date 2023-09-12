@@ -52,8 +52,7 @@ body {
 #legend .box {
   width: 1.1rem;
   height: 1.1rem;
-  background: #009de5;
-  opacity: .5;
+  background: #cc4e00;
   margin-right: .25rem;
   border-radius: 50%;
 }
@@ -61,8 +60,8 @@ body {
   line-height: 1.1rem;
 }
 #legend .key:last-child .box {
-  background: #cc4e00;
-  opacity: 1;
+  background: #009de5;
+  opacity: .5;
 }
 #footer {
   font-family: ABCSansNovaLight, "Arial Narrow", Helvetica, sans-serif;
@@ -109,7 +108,7 @@ body {
     background: black;
     border: solid 2px white;
   }
-  body.darkMode #legend .box {
+  body.darkMode #legend .key:last-child .box {
     opacity: 1;
   }
 }
