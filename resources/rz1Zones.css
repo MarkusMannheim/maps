@@ -101,17 +101,15 @@ body {
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  body.darkMode {
     color: white;
-  }  
-  body {
     background: black;
-  }
-  #legend {
+  }  
+  body.darkMode #legend {
     background: black;
     border: solid 2px white;
   }
-  #legend .box {
+  body.darkMode #legend .box {
     opacity: 1;
   }
 }
